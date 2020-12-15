@@ -136,9 +136,9 @@ class PowerModel : public SimObject
     class ThermalProbeListener : public ProbeListenerArgBase<Temperature>
     {
       public:
-        ThermalProbeListener(PowerModel &_pm, ProbeManager *pm,
-                      const std::string &name)
-            : ProbeListenerArgBase(pm, name), pm(_pm) {}
+        ThermalProbeListener(PowerModel &_pm)
+          : ProbeListenerArgBase(), pm(_pm)
+        {}
 
         void notify(const Temperature &temp)
         {
@@ -151,9 +151,6 @@ class PowerModel : public SimObject
 
     /** Actual power models (one per power state) */
     std::vector<PowerModelState*> states_pm;
-
-    /** Listener to catch temperature changes in the SubSystem */
-    std::unique_ptr<ThermalProbeListener> thermalListener;
 
     /** The subsystem this power model belongs to */
     SubSystem * subsystem;

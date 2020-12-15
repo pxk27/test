@@ -473,7 +473,7 @@ PMU::RegularEvent::RegularProbe::notify(const uint64_t &val)
 void
 PMU::RegularEvent::enable()
 {
-    for (auto &listener : attachedProbePointList) {
+    for (auto &listener : listeners) {
         listener->enable();
     }
 }
@@ -481,7 +481,7 @@ PMU::RegularEvent::enable()
 void
 PMU::RegularEvent::disable()
 {
-    for (auto &listener : attachedProbePointList) {
+    for (auto &listener : listeners) {
         listener->disable();
     }
 }

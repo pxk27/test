@@ -38,6 +38,7 @@
 #define __MEM_CACHE_PREFETCH_PIF_HH__
 
 #include <deque>
+#include <memory>
 #include <vector>
 
 #include "base/circular_queue.hh"
@@ -165,18 +166,14 @@ class PIF : public Queued
         class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
         {
           public:
-            PrefetchListenerPC(PIF &_parent, ProbeManager *pm,
-                             const std::string &name)
-                : ProbeListenerArgBase(pm, name),
-                  parent(_parent) {}
+            PrefetchListenerPC(PIF &_parent)
+              : ProbeListenerArgBase(), parent(_parent)
+            {}
             void notify(const Addr& pc) override;
+
           protected:
             PIF &parent;
         };
-
-        /** Array of probe listeners */
-        std::vector<PrefetchListenerPC *> listenersPC;
-
 
     public:
         PIF(const PIFPrefetcherParams &p);

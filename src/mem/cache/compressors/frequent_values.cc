@@ -288,16 +288,9 @@ FrequentValues::probeNotify(const DataUpdate &data_update)
 void
 FrequentValues::regProbeListeners()
 {
-    assert(listeners.empty());
     assert(cache != nullptr);
-    listeners.push_back(new FrequentValuesListener(
-        *this, cache->getProbeManager(), "Data Update"));
-}
-
-void
-FrequentValues::FrequentValuesListener::notify(const DataUpdate &data_update)
-{
-    parent.probeNotify(data_update);
+    cache->getProbeManager()->addListener("Data Update",
+        new FrequentValuesListener(*this));
 }
 
 } // namespace compression

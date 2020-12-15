@@ -37,6 +37,8 @@
 
 #include "cpu/simple/probes/simpoint.hh"
 
+#include <memory>
+
 #include "base/output.hh"
 
 namespace gem5
@@ -70,8 +72,8 @@ SimPoint::regProbeListeners()
 {
     typedef ProbeListenerArg<SimPoint, std::pair<SimpleThread*,StaticInstPtr>>
         SimPointListener;
-    listeners.push_back(new SimPointListener(this, "Commit",
-                                             &SimPoint::profile));
+    getProbeManager()->addListener("Commit",
+        new SimPointListener(this, &SimPoint::profile));
 }
 
 void

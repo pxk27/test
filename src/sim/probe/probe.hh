@@ -63,6 +63,8 @@
 #ifndef __SIM_PROBE_PROBE_HH__
 #define __SIM_PROBE_PROBE_HH__
 
+#include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -103,18 +105,15 @@ namespace probing
  * SimObject.
  *
  * It instantiates manager from a call to Parent.any.
- * The vector of listeners is used simply to hold onto listeners until the
- * ProbeListenerObject is destroyed.
  */
 class ProbeListenerObject : public SimObject
 {
   protected:
     ProbeManager *manager;
-    std::vector<ProbeListener *> listeners;
 
   public:
     ProbeListenerObject(const ProbeListenerObjectParams &params);
-    virtual ~ProbeListenerObject();
+    virtual ~ProbeListenerObject() = default;
     ProbeManager* getProbeManager() { return manager; }
 };
 
@@ -122,14 +121,13 @@ class ProbeListenerObject : public SimObject
  * ProbeListener base class; here to simplify things like containers
  * containing multiple types of ProbeListener.
  *
- * Note a ProbeListener is added to the ProbePoint in constructor by
- * using the ProbeManager passed in.
+ * Every new probe listener must be added to the probe manager.
  */
 class ProbeListener
 {
   public:
-    ProbeListener(ProbeManager *manager, const std::string &name);
-    virtual ~ProbeListener();
+    ProbeListener() : _enabled(true) {}
+    virtual ~ProbeListener() = default;
     ProbeListener(const ProbeListener& other) = delete;
     ProbeListener& operator=(const ProbeListener& other) = delete;
     ProbeListener(ProbeListener&& other) noexcept = delete;
@@ -148,10 +146,6 @@ class ProbeListener
      * @return True if this listener can process notifications.
      */
     bool enabled() const { return _enabled; }
-
-  protected:
-    ProbeManager *const manager;
-    const std::string name;
 
   private:
     /** Whether this listener processes notifications. */
@@ -198,7 +192,7 @@ class ProbeManager : public Named
      * @param listener the ProbeListener to add.
      * @return true if added, false otherwise.
      */
-    bool addListener(std::string point_name, ProbeListener &listener);
+    bool addListener(std::string point_name, ProbeListener *listener);
 
     /**
      * @brief Remove a ProbeListener from the ProbePoint named by pointName.
@@ -208,7 +202,7 @@ class ProbeManager : public Named
      * @param listener the ProbeListener to remove.
      * @return true if removed, false otherwise.
      */
-    bool removeListener(std::string point_name, ProbeListener &listener);
+    bool removeListener(std::string point_name, ProbeListener *listener);
 
     /**
      * @brief Create and add a ProbePoint to this SimObject's ProbeManager.
@@ -248,9 +242,7 @@ template <class Arg>
 class ProbeListenerArgBase : public ProbeListener
 {
   public:
-    ProbeListenerArgBase(ProbeManager *pm, const std::string &name)
-        : ProbeListener(pm, name)
-    {}
+    ProbeListenerArgBase() : ProbeListener() {}
     virtual void notify(const Arg &val) = 0;
 };
 
@@ -274,9 +266,8 @@ class ProbeListenerArg : public ProbeListenerArgBase<Arg>
      * @param name the name of the ProbePoint to add this listener to.
      * @param func a pointer to the function on obj (called on notify).
      */
-    ProbeListenerArg(T *obj, const std::string &name,
-        void (T::* func)(const Arg &))
-        : ProbeListenerArgBase<Arg>(obj->getProbeManager(), name),
+    ProbeListenerArg(T *obj, void (T::* func)(const Arg &))
+        : ProbeListenerArgBase<Arg>(),
           object(obj),
           function(func)
     {}
@@ -300,7 +291,7 @@ template <typename Arg>
 class ProbePointArg : public ProbePoint
 {
     /** The attached listeners. */
-    std::vector<ProbeListenerArgBase<Arg> *> listeners;
+    std::vector<std::shared_ptr<ProbeListenerArgBase<Arg>>> listeners;
 
   public:
     ProbePointArg(std::string name)
@@ -325,9 +316,10 @@ class ProbePointArg : public ProbePoint
     addListener(ProbeListener *l) override
     {
         // check listener not already added
-        if (std::find(listeners.begin(), listeners.end(), l) ==
-            listeners.end()) {
-            listeners.push_back(static_cast<ProbeListenerArgBase<Arg> *>(l));
+        if (listeners.end() == std::find_if(listeners.begin(), listeners.end(),
+            [l](const std::shared_ptr<ProbeListenerArgBase<Arg>> &listener) ->
+                bool { return listener.get() == l; })) {
+            listeners.emplace_back(static_cast<ProbeListenerArgBase<Arg>*>(l));
         }
     }
 
@@ -338,8 +330,9 @@ class ProbePointArg : public ProbePoint
     void
     removeListener(ProbeListener *l) override
     {
-        listeners.erase(std::remove(listeners.begin(), listeners.end(), l),
-                        listeners.end());
+        listeners.erase(std::remove_if(listeners.begin(), listeners.end(),
+            [l](const std::shared_ptr<ProbeListenerArgBase<Arg>> &listener) ->
+                bool { return listener.get() == l; }), listeners.end());
     }
 
     /**

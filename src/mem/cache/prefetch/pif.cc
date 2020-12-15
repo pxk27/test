@@ -49,8 +49,7 @@ PIF::PIF(const PIFPrefetcherParams &p)
       historyBuffer(p.history_buffer_size),
       index(p.index_assoc, p.index_entries, p.index_indexing_policy,
             p.index_replacement_policy),
-      streamAddressBuffer(p.stream_address_buffer_entries),
-      listenersPC()
+      streamAddressBuffer(p.stream_address_buffer_entries)
 {
 }
 
@@ -244,8 +243,7 @@ PIF::PrefetchListenerPC::notify(const Addr& pc)
 void
 PIF::addEventProbeRetiredInsts(SimObject *obj, const char *name)
 {
-    ProbeManager *pm(obj->getProbeManager());
-    listenersPC.push_back(new PrefetchListenerPC(*this, pm, name));
+    obj->getProbeManager()->addListener(name, new PrefetchListenerPC(*this));
 }
 
 } // namespace prefetch

@@ -37,6 +37,8 @@
 
 #include "cpu/o3/probe/simple_trace.hh"
 
+#include <memory>
+
 #include "base/trace.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "debug/SimpleTrace.hh"
@@ -66,12 +68,11 @@ SimpleTrace::traceFetch(const DynInstConstPtr& dynInst)
 void
 SimpleTrace::regProbeListeners()
 {
-    typedef ProbeListenerArg<SimpleTrace,
-            DynInstConstPtr> DynInstListener;
-    listeners.push_back(new DynInstListener(this, "Commit",
-                &SimpleTrace::traceCommit));
-    listeners.push_back(new DynInstListener(this, "Fetch",
-                &SimpleTrace::traceFetch));
+    typedef ProbeListenerArg<SimpleTrace, DynInstConstPtr> DynInstListener;
+    getProbeManager()->addListener("Commit", new DynInstListener(this,
+        &SimpleTrace::traceCommit));
+    getProbeManager()->addListener("Fetch", new DynInstListener(this,
+        &SimpleTrace::traceFetch));
 }
 
 } // namespace o3

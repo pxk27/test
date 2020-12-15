@@ -351,17 +351,17 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         {
             panic_if(!object,"malformed probe-point"
                 " definition with name %s\n", name);
-            attachedProbePointList.emplace_back(
-                new RegularProbe(this, object, name));
+            auto listener = new RegularProbe(this);
+            object->getProbeManager()->addListener(name, listener);
+            listeners.emplace_back(listener);
         }
 
       protected:
         struct RegularProbe: public  ProbeListenerArgBase<uint64_t>
         {
-            RegularProbe(RegularEvent *parent, SimObject* obj,
-                std::string name)
-                : ProbeListenerArgBase(obj->getProbeManager(), name),
-                  parentEvent(parent) {}
+            RegularProbe(RegularEvent *parent)
+              : ProbeListenerArgBase(), parentEvent(parent)
+            {}
 
             RegularProbe() = delete;
 
@@ -371,10 +371,12 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
             RegularEvent *parentEvent;
         };
 
-        /** Set of probe listeners tapping onto each of the input micro-arch
-         *  events which compose this pmu event
+        /**
+         * Set of probe listeners tapping onto each of the input micro-arch
+         * events which compose this pmu event.
+         * These pointers are managed by the probe.
          */
-        std::vector<std::unique_ptr<RegularProbe>> attachedProbePointList;
+        std::vector<RegularProbe*> listeners;
 
         void enable() override;
 

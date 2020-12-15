@@ -60,34 +60,15 @@ ProbeListenerObject::ProbeListenerObject(
         "The probe manager of %s has not been instantiated", name());
 }
 
-ProbeListenerObject::~ProbeListenerObject()
-{
-    for (auto l = listeners.begin(); l != listeners.end(); ++l) {
-        delete (*l);
-    }
-    listeners.clear();
-}
-
-ProbeListener::ProbeListener(ProbeManager *_manager, const std::string &_name)
-    : manager(_manager), name(_name), _enabled(true)
-{
-    manager->addListener(name, *this);
-}
-
-ProbeListener::~ProbeListener()
-{
-    manager->removeListener(name, *this);
-}
-
 bool
-ProbeManager::addListener(std::string point_name, ProbeListener &listener)
+ProbeManager::addListener(std::string point_name, ProbeListener *listener)
 {
     DPRINTFR(ProbeVerbose, "Probes: Call to addListener to \"%s\" on %s.\n",
         point_name, name());
     bool added = false;
     for (auto p = points.begin(); p != points.end(); ++p) {
         if ((*p)->getName() == point_name) {
-            (*p)->addListener(&listener);
+            (*p)->addListener(listener);
             added = true;
         }
     }
@@ -99,14 +80,14 @@ ProbeManager::addListener(std::string point_name, ProbeListener &listener)
 }
 
 bool
-ProbeManager::removeListener(std::string point_name, ProbeListener &listener)
+ProbeManager::removeListener(std::string point_name, ProbeListener *listener)
 {
     DPRINTFR(ProbeVerbose, "Probes: Call to removeListener from \"%s\" on "
         "%s.\n", point_name, name());
     bool removed = false;
     for (auto p = points.begin(); p != points.end(); ++p) {
         if ((*p)->getName() == point_name) {
-            (*p)->removeListener(&listener);
+            (*p)->removeListener(listener);
             removed = true;
         }
     }

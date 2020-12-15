@@ -47,6 +47,7 @@
 #define __MEM_CACHE_PREFETCH_BASE_HH__
 
 #include <cstdint>
+#include <memory>
 
 #include "arch/generic/tlb.hh"
 #include "base/compiler.hh"
@@ -74,19 +75,17 @@ class Base : public ClockedObject
     class PrefetchListener : public ProbeListenerArgBase<PacketPtr>
     {
       public:
-        PrefetchListener(Base &_parent, ProbeManager *pm,
-                         const std::string &name, bool _isFill = false,
-                         bool _miss = false)
-            : ProbeListenerArgBase(pm, name),
-              parent(_parent), isFill(_isFill), miss(_miss) {}
+        PrefetchListener(Base &_parent, bool _isFill=false, bool _miss=false)
+          : ProbeListenerArgBase(),
+            parent(_parent), isFill(_isFill), miss(_miss)
+        {}
         void notify(const PacketPtr &pkt) override;
+
       protected:
         Base &parent;
         const bool isFill;
         const bool miss;
     };
-
-    std::vector<PrefetchListener *> listeners;
 
   public:
 
