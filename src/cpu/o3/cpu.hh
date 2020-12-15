@@ -45,6 +45,7 @@
 
 #include <iostream>
 #include <list>
+#include <memory>
 #include <queue>
 #include <set>
 #include <vector>
@@ -171,8 +172,9 @@ class CPU : public BaseCPU
     /** Constructs a CPU with the given parameters. */
     CPU(const BaseO3CPUParams &params);
 
-    ProbePointArg<PacketPtr> *ppInstAccessComplete;
-    ProbePointArg<std::pair<DynInstPtr, PacketPtr> > *ppDataAccessComplete;
+    std::shared_ptr<ProbePointArg<PacketPtr>> ppInstAccessComplete;
+    std::shared_ptr<ProbePointArg<
+        std::pair<DynInstPtr, PacketPtr>>> ppDataAccessComplete;
 
     /** Register probe points. */
     void regProbePoints() override;

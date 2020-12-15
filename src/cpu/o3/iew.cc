@@ -124,22 +124,23 @@ IEW::name() const
 void
 IEW::regProbePoints()
 {
-    ppDispatch = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "Dispatch");
-    ppMispredict = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "Mispredict");
+    auto manager = cpu->getProbeManager();
+    ppDispatch =
+        manager->template addPoint<ProbePointArg<DynInstPtr>>("Dispatch");
+    ppMispredict =
+        manager->template addPoint<ProbePointArg<DynInstPtr>>("Mispredict");
     /**
      * Probe point with dynamic instruction as the argument used to probe when
      * an instruction starts to execute.
      */
-    ppExecute = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "Execute");
+    ppExecute =
+        manager->template addPoint<ProbePointArg<DynInstPtr>>("Execute");
     /**
      * Probe point with dynamic instruction as the argument used to probe when
      * an instruction execution completes and it is marked ready to commit.
      */
-    ppToCommit = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "ToCommit");
+    ppToCommit =
+        manager->template addPoint<ProbePointArg<DynInstPtr>>("ToCommit");
 }
 
 IEW::IEWStats::IEWStats(CPU *cpu)

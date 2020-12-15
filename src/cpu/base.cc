@@ -328,29 +328,20 @@ BaseCPU::startup()
 
 }
 
-probing::PMUUPtr
-BaseCPU::pmuProbePoint(const char *name)
-{
-    probing::PMUUPtr ptr;
-    ptr.reset(new probing::PMU(getProbeManager(), name));
-
-    return ptr;
-}
-
 void
 BaseCPU::regProbePoints()
 {
-    ppAllCycles = pmuProbePoint("Cycles");
-    ppActiveCycles = pmuProbePoint("ActiveCycles");
+    auto manager = getProbeManager();
+    ppAllCycles = manager->addPoint<ProbePoints::PMU>("Cycles");
+    ppActiveCycles = manager->addPoint<ProbePoints::PMU>("ActiveCycles");
 
-    ppRetiredInsts = pmuProbePoint("RetiredInsts");
-    ppRetiredInstsPC = pmuProbePoint("RetiredInstsPC");
-    ppRetiredLoads = pmuProbePoint("RetiredLoads");
-    ppRetiredStores = pmuProbePoint("RetiredStores");
-    ppRetiredBranches = pmuProbePoint("RetiredBranches");
+    ppRetiredInsts = manager->addPoint<ProbePoints::PMU>("RetiredInsts");
+    ppRetiredInstsPC = manager->addPoint<ProbePoints::PMU>("RetiredInstsPC");
+    ppRetiredLoads = manager->addPoint<ProbePoints::PMU>("RetiredLoads");
+    ppRetiredStores = manager->addPoint<ProbePoints::PMU>("RetiredStores");
+    ppRetiredBranches = manager->addPoint<ProbePoints::PMU>("RetiredBranches");
 
-    ppSleeping = new ProbePointArg<bool>(this->getProbeManager(),
-                                         "Sleeping");
+    ppSleeping = manager->addPoint<ProbePointArg<bool>>("Sleeping");
 }
 
 void

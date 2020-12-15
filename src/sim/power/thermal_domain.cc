@@ -72,8 +72,9 @@ ThermalDomain::setSubSystem(SubSystem * ss)
     assert(!this->subsystem);
     this->subsystem = ss;
 
-    ppThermalUpdate = new ProbePointArg<Temperature>(
-        subsystem->getProbeManager(), "thermalUpdate");
+    ppThermalUpdate =
+        subsystem->getProbeManager()->addPoint<ProbePointArg<Temperature>>(
+        "thermalUpdate");
 }
 
 void

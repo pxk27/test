@@ -420,10 +420,10 @@ class CommMonitor : public SimObject
      */
 
     /** Successfully forwarded request packet */
-    probing::PacketUPtr ppPktReq;
+    probing::PacketPtr ppPktReq;
 
     /** Successfully forwarded response packet */
-    probing::PacketUPtr ppPktResp;
+    probing::PacketPtr ppPktResp;
 
     /** @} */
 };

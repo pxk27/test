@@ -696,7 +696,7 @@ TLB::TlbStats::TlbStats(TLB &parent)
 void
 TLB::regProbePoints()
 {
-    ppRefills.reset(new probing::PMU(getProbeManager(), "Refills"));
+    ppRefills = getProbeManager()->addPoint<probing::PMU>("Refills");
 }
 
 Port *

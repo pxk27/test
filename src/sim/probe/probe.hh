@@ -68,6 +68,7 @@
 
 #include "base/compiler.hh"
 #include "base/trace.hh"
+#include "debug/ProbeVerbose.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
@@ -148,8 +149,8 @@ class ProbePoint
   protected:
     const std::string name;
   public:
-    ProbePoint(ProbeManager *manager, const std::string &name);
-    virtual ~ProbePoint() {}
+    ProbePoint(const std::string &name);
+    virtual ~ProbePoint() = default;
 
     virtual void addListener(ProbeListener *listener) = 0;
     virtual void removeListener(ProbeListener *listener) = 0;
@@ -166,7 +167,7 @@ class ProbeManager
     /** Required for sensible debug messages.*/
     GEM5_CLASS_VAR_USED const SimObject *object;
     /** Vector for name look-up. */
-    std::vector<ProbePoint *> points;
+    std::vector<std::shared_ptr<ProbePoint>> points;
 
   public:
     ProbeManager(SimObject *obj)
@@ -194,10 +195,30 @@ class ProbeManager
     bool removeListener(std::string point_name, ProbeListener &listener);
 
     /**
-     * @brief Add a ProbePoint to this SimObject ProbeManager.
-     * @param point the ProbePoint to add.
+     * @brief Create and add a ProbePoint to this SimObject's ProbeManager.
+     * @tparam Arg The type of the ProbePoint.
+     * @param pp_name The name of the ProbePoint to create.
+     * @return A pointer to the probe point, so that a cached copy can
+     *         be kept to generate notifications.
      */
-    void addPoint(ProbePoint &point);
+    template <class Arg>
+    std::shared_ptr<Arg>
+    addPoint(const std::string &pp_name)
+    {
+        DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s.\n",
+            pp_name, object->name());
+
+        for (auto p = points.begin(); p != points.end(); ++p) {
+            if ((*p)->getName() == pp_name) {
+                DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s "
+                    "failed, already added.\n", pp_name, object->name());
+                return std::shared_ptr<Arg>();
+            }
+        }
+        auto point = std::make_shared<Arg>(pp_name);
+        points.push_back(point);
+        return point;
+    }
 };
 
 /**
@@ -266,8 +287,8 @@ class ProbePointArg : public ProbePoint
     std::vector<ProbeListenerArgBase<Arg> *> listeners;
 
   public:
-    ProbePointArg(ProbeManager *manager, std::string name)
-        : ProbePoint(manager, name)
+    ProbePointArg(std::string name)
+        : ProbePoint(name)
     {
     }
 

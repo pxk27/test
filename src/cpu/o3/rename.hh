@@ -43,6 +43,7 @@
 #define __CPU_O3_RENAME_HH__
 
 #include <list>
+#include <memory>
 #include <utility>
 
 #include "base/statistics.hh"
@@ -116,12 +117,12 @@ class Rename
     /** Probe points. */
     typedef std::pair<InstSeqNum, PhysRegIdPtr> SeqNumRegPair;
     /** To probe when register renaming for an instruction is complete */
-    ProbePointArg<DynInstPtr> *ppRename;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppRename;
     /**
      * To probe when an instruction is squashed and the register mapping
      * for it needs to be undone
      */
-    ProbePointArg<SeqNumRegPair> *ppSquashInRename;
+    std::shared_ptr<ProbePointArg<SeqNumRegPair>> ppSquashInRename;
 
   public:
     /** Rename constructor. */

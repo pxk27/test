@@ -167,7 +167,7 @@ class TLB : public BaseTLB
     } stats;
 
     /** PMU probe for TLB refills */
-    probing::PMUUPtr ppRefills;
+    probing::PMUPtr ppRefills;
 
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
     vmid_t vmid;

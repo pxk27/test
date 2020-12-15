@@ -41,6 +41,7 @@
 #ifndef __CPU_O3_IEW_HH__
 #define __CPU_O3_IEW_HH__
 
+#include <memory>
 #include <queue>
 #include <set>
 
@@ -118,12 +119,12 @@ class IEW
     StageStatus wbStatus;
 
     /** Probe points. */
-    ProbePointArg<DynInstPtr> *ppMispredict;
-    ProbePointArg<DynInstPtr> *ppDispatch;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppMispredict;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppDispatch;
     /** To probe when instruction execution begins. */
-    ProbePointArg<DynInstPtr> *ppExecute;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppExecute;
     /** To probe when instruction execution is complete. */
-    ProbePointArg<DynInstPtr> *ppToCommit;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppToCommit;
 
   public:
     /** Constructs a IEW with the given parameters. */

@@ -178,10 +178,11 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
 void
 Rename::regProbePoints()
 {
-    ppRename = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "Rename");
-    ppSquashInRename = new ProbePointArg<SeqNumRegPair>(cpu->getProbeManager(),
-                                                        "SquashInRename");
+    auto manager = cpu->getProbeManager();
+    ppRename = manager->template addPoint<ProbePointArg<DynInstPtr>>("Rename");
+    ppSquashInRename =
+        manager->template addPoint<ProbePointArg<SeqNumRegPair>>(
+        "SquashInRename");
 }
 
 void

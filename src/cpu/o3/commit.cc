@@ -138,12 +138,11 @@ std::string Commit::name() const { return cpu->name() + ".commit"; }
 void
 Commit::regProbePoints()
 {
-    ppCommit = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "Commit");
-    ppCommitStall = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "CommitStall");
-    ppSquash = new ProbePointArg<DynInstPtr>(
-            cpu->getProbeManager(), "Squash");
+    auto manager = cpu->getProbeManager();
+    ppCommit = manager->template addPoint<ProbePointArg<DynInstPtr>>("Commit");
+    ppCommitStall =
+        manager->template addPoint<ProbePointArg<DynInstPtr>>("CommitStall");
+    ppSquash = manager->template addPoint<ProbePointArg<DynInstPtr>>("Squash");
 }
 
 Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)

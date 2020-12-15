@@ -41,6 +41,8 @@
 #ifndef __CPU_SIMPLE_ATOMIC_HH__
 #define __CPU_SIMPLE_ATOMIC_HH__
 
+#include <memory>
+
 #include "cpu/simple/base.hh"
 #include "cpu/simple/exec_context.hh"
 #include "mem/request.hh"
@@ -171,7 +173,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     Tick dcache_latency;
 
     /** Probe Points. */
-    ProbePointArg<std::pair<SimpleThread *, const StaticInstPtr>> *ppCommit;
+    std::shared_ptr<ProbePointArg<
+        std::pair<SimpleThread *, const StaticInstPtr>>> ppCommit;
 
   protected:
 

@@ -102,20 +102,12 @@ BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
     BTBHitRatio.precision(6);
 }
 
-probing::PMUUPtr
-BPredUnit::pmuProbePoint(const char *name)
-{
-    probing::PMUUPtr ptr;
-    ptr.reset(new probing::PMU(getProbeManager(), name));
-
-    return ptr;
-}
-
 void
 BPredUnit::regProbePoints()
 {
-    ppBranches = pmuProbePoint("Branches");
-    ppMisses = pmuProbePoint("Misses");
+    auto manager = getProbeManager();
+    ppBranches = manager->addPoint<ProbePoints::PMU>("Branches");
+    ppMisses = manager->addPoint<ProbePoints::PMU>("Misses");
 }
 
 void

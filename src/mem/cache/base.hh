@@ -48,6 +48,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "base/addr_range.hh"
@@ -356,20 +357,20 @@ class BaseCache : public ClockedObject
     prefetch::Base *prefetcher;
 
     /** To probe when a cache hit occurs */
-    ProbePointArg<PacketPtr> *ppHit;
+    std::shared_ptr<ProbePointArg<PacketPtr>> ppHit;
 
     /** To probe when a cache miss occurs */
-    ProbePointArg<PacketPtr> *ppMiss;
+    std::shared_ptr<ProbePointArg<PacketPtr>> ppMiss;
 
     /** To probe when a cache fill occurs */
-    ProbePointArg<PacketPtr> *ppFill;
+    std::shared_ptr<ProbePointArg<PacketPtr>> ppFill;
 
     /**
      * To probe when the contents of a block are updated. Content updates
      * include data fills, overwrites, and invalidations, which means that
      * this probe partially overlaps with other probes.
      */
-    ProbePointArg<DataUpdate> *ppDataUpdate;
+    std::shared_ptr<ProbePointArg<DataUpdate>> ppDataUpdate;
 
     /**
      * The writeAllocator drive optimizations for streaming writes.

@@ -343,24 +343,14 @@ class BPredUnit : public SimObject
      */
 
     /**
-     * Helper method to instantiate probe points belonging to this
-     * object.
-     *
-     * @param name Name of the probe point.
-     * @return A unique_ptr to the new probe point.
-     */
-    probing::PMUUPtr pmuProbePoint(const char *name);
-
-
-    /**
      * Branches seen by the branch predictor
      *
      * @note This counter includes speculative branches.
      */
-    probing::PMUUPtr ppBranches;
+    probing::PMUPtr ppBranches;
 
     /** Miss-predicted branches */
-    probing::PMUUPtr ppMisses;
+    probing::PMUPtr ppMisses;
 
     /** @} */
 };

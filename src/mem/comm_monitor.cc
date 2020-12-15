@@ -73,8 +73,9 @@ CommMonitor::init()
 void
 CommMonitor::regProbePoints()
 {
-    ppPktReq.reset(new probing::Packet(getProbeManager(), "PktRequest"));
-    ppPktResp.reset(new probing::Packet(getProbeManager(), "PktResponse"));
+    auto manager = getProbeManager();
+    ppPktReq = manager->addPoint<probing::Packet>("PktRequest");
+    ppPktResp = manager->addPoint<probing::Packet>("PktResponse");
 }
 
 Port &

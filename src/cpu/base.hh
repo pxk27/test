@@ -42,6 +42,7 @@
 #ifndef __CPU_BASE_HH__
 #define __CPU_BASE_HH__
 
+#include <memory>
 #include <vector>
 
 // Before we do anything else, check if this build is the NULL ISA,
@@ -471,15 +472,6 @@ class BaseCPU : public ClockedObject
 
    protected:
     /**
-     * Helper method to instantiate probe points belonging to this
-     * object.
-     *
-     * @param name Name of the probe point.
-     * @return A unique_ptr to the new probe point.
-     */
-    probing::PMUUPtr pmuProbePoint(const char *name);
-
-    /**
      * Instruction commit probe point.
      *
      * This probe point is triggered whenever one or more instructions
@@ -487,22 +479,22 @@ class BaseCPU : public ClockedObject
      * instruction. However, CPU models committing bundles of
      * instructions may call notify once for the entire bundle.
      */
-    probing::PMUUPtr ppRetiredInsts;
-    probing::PMUUPtr ppRetiredInstsPC;
+    probing::PMUPtr ppRetiredInsts;
+    probing::PMUPtr ppRetiredInstsPC;
 
     /** Retired load instructions */
-    probing::PMUUPtr ppRetiredLoads;
+    probing::PMUPtr ppRetiredLoads;
     /** Retired store instructions */
-    probing::PMUUPtr ppRetiredStores;
+    probing::PMUPtr ppRetiredStores;
 
     /** Retired branches (any type) */
-    probing::PMUUPtr ppRetiredBranches;
+    probing::PMUPtr ppRetiredBranches;
 
     /** CPU cycle counter even if any thread Context is suspended*/
-    probing::PMUUPtr ppAllCycles;
+    probing::PMUPtr ppAllCycles;
 
     /** CPU cycle counter, only counts if any thread contexts is active **/
-    probing::PMUUPtr ppActiveCycles;
+    probing::PMUPtr ppActiveCycles;
 
     /**
      * ProbePoint that signals transitions of threadContexts sets.
@@ -512,7 +504,7 @@ class BaseCPU : public ClockedObject
      * - If the parameter is false then a threadContext was enabled, all the
      * remaining threadContexts are disabled.
      */
-    ProbePointArg<bool> *ppSleeping;
+    std::shared_ptr<ProbePointArg<bool>> ppSleeping;
     /** @} */
 
     enum CPUState

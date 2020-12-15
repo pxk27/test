@@ -41,6 +41,9 @@
 #ifndef __CPU_O3_FETCH_HH__
 #define __CPU_O3_FETCH_HH__
 
+#include <cassert>
+#include <memory>
+
 #include "arch/generic/decoder.hh"
 #include "arch/generic/mmu.hh"
 #include "base/statistics.hh"
@@ -197,9 +200,9 @@ class Fetch
     std::list<ThreadID> priorityList;
 
     /** Probe points. */
-    ProbePointArg<DynInstPtr> *ppFetch;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppFetch;
     /** To probe when a fetch request is successfully sent. */
-    ProbePointArg<RequestPtr> *ppFetchRequestSent;
+    std::shared_ptr<ProbePointArg<RequestPtr>> ppFetchRequestSent;
 
   public:
     /** Fetch constructor. */

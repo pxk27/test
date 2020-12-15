@@ -38,6 +38,7 @@
 #ifndef __SIM_THERMAL_DOMAIN_HH__
 #define __SIM_THERMAL_DOMAIN_HH__
 
+#include <memory>
 #include <vector>
 
 #include "base/statistics.hh"
@@ -106,8 +107,7 @@ class ThermalDomain : public SimObject, public ThermalEntity
     statistics::Value currentTemp;
 
     /** Probe to signal for temperature changes in this domain */
-    ProbePointArg<Temperature> *ppThermalUpdate;
-
+    std::shared_ptr<ProbePointArg<Temperature>> ppThermalUpdate;
 };
 
 } // namespace gem5

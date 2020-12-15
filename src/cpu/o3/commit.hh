@@ -41,6 +41,7 @@
 #ifndef __CPU_O3_COMMIT_HH__
 #define __CPU_O3_COMMIT_HH__
 
+#include <memory>
 #include <queue>
 
 #include "base/statistics.hh"
@@ -122,10 +123,10 @@ class Commit
     CommitPolicy commitPolicy;
 
     /** Probe Points. */
-    ProbePointArg<DynInstPtr> *ppCommit;
-    ProbePointArg<DynInstPtr> *ppCommitStall;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppCommit;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppCommitStall;
     /** To probe when an instruction is squashed */
-    ProbePointArg<DynInstPtr> *ppSquash;
+    std::shared_ptr<ProbePointArg<DynInstPtr>> ppSquash;
 
     /** Mark the thread as processing a trap. */
     void processTrapEvent(ThreadID tid);

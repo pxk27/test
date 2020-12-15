@@ -2505,11 +2505,11 @@ BaseCache::CacheStats::regStats()
 void
 BaseCache::regProbePoints()
 {
-    ppHit = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Hit");
-    ppMiss = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Miss");
-    ppFill = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Fill");
-    ppDataUpdate =
-        new ProbePointArg<DataUpdate>(this->getProbeManager(), "Data Update");
+    auto manager = this->getProbeManager();
+    ppHit = manager->addPoint<ProbePointArg<PacketPtr>>("Hit");
+    ppMiss = manager->addPoint<ProbePointArg<PacketPtr>>("Miss");
+    ppFill = manager->addPoint<ProbePointArg<PacketPtr>>("Fill");
+    ppDataUpdate = manager->addPoint<ProbePointArg<DataUpdate>>("Data Update");
 }
 
 ///////////////

@@ -38,9 +38,13 @@
 #ifndef __SIM_PROBE_MEM_HH__
 #define __SIM_PROBE_MEM_HH__
 
+#include <cstdint>
 #include <memory>
 
+#include "base/compiler.hh"
+#include "base/types.hh"
 #include "mem/packet.hh"
+#include "mem/request.hh"
 #include "sim/probe/probe.hh"
 
 namespace gem5
@@ -107,7 +111,8 @@ struct PacketInfo
  *
  */
 typedef ProbePointArg<PacketInfo> Packet;
-typedef std::unique_ptr<Packet> PacketUPtr;
+typedef std::shared_ptr<Packet> PacketPtr;
+GEM5_DEPRECATED_CLASS(PacketUPtr, PacketPtr);
 
 } // namespace probing
 

@@ -40,18 +40,15 @@
 
 #include "sim/probe/probe.hh"
 
-#include "debug/ProbeVerbose.hh"
+#include "base/logging.hh"
 #include "params/ProbeListenerObject.hh"
 
 namespace gem5
 {
 
-ProbePoint::ProbePoint(ProbeManager *manager, const std::string& _name)
+ProbePoint::ProbePoint(const std::string& _name)
     : name(_name)
 {
-    if (manager) {
-        manager->addPoint(*this);
-    }
 }
 
 ProbeListenerObject::ProbeListenerObject(
@@ -59,6 +56,8 @@ ProbeListenerObject::ProbeListenerObject(
     : SimObject(params),
       manager(params.manager->getProbeManager())
 {
+    fatal_if(manager == nullptr,
+        "The probe manager of %s has not been instantiated", name());
 }
 
 ProbeListenerObject::~ProbeListenerObject()
@@ -116,22 +115,6 @@ ProbeManager::removeListener(std::string point_name, ProbeListener &listener)
             "on %s failed, no such point.\n", point_name, object->name());
     }
     return removed;
-}
-
-void
-ProbeManager::addPoint(ProbePoint &point)
-{
-    DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s.\n",
-        point.getName(), object->name());
-
-    for (auto p = points.begin(); p != points.end(); ++p) {
-        if ((*p)->getName() == point.getName()) {
-            DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s "
-                "failed, already added.\n", point.getName(), object->name());
-            return;
-        }
-    }
-    points.push_back(&point);
 }
 
 } // namespace gem5

@@ -765,8 +765,8 @@ AtomicSimpleCPU::regProbePoints()
 {
     BaseCPU::regProbePoints();
 
-    ppCommit = new ProbePointArg<std::pair<SimpleThread*, const StaticInstPtr>>
-                                (getProbeManager(), "Commit");
+    ppCommit = getProbeManager()->addPoint<ProbePointArg<
+        std::pair<SimpleThread*, const StaticInstPtr>>>("Commit");
 }
 
 void

@@ -38,8 +38,10 @@
 #ifndef __SIM_PROBE_PMU_HH__
 #define __SIM_PROBE_PMU_HH__
 
+#include <cstdint>
 #include <memory>
 
+#include "base/compiler.hh"
 #include "sim/probe/probe.hh"
 
 namespace gem5
@@ -58,7 +60,8 @@ namespace probing
  * notify method with the event count increment as its only parameter.
  */
 typedef ProbePointArg<uint64_t> PMU;
-typedef std::unique_ptr<PMU> PMUUPtr;
+typedef std::shared_ptr<PMU> PMUPtr;
+GEM5_DEPRECATED_CLASS(PMUUPtr, PMUPtr);
 
 }
 
