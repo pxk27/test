@@ -473,16 +473,17 @@ PMU::RegularEvent::RegularProbe::notify(const uint64_t &val)
 void
 PMU::RegularEvent::enable()
 {
-    for (auto& subEvents: microArchitectureEventSet) {
-        attachedProbePointList.emplace_back(
-            new RegularProbe(this, subEvents.first, subEvents.second));
+    for (auto &listener : attachedProbePointList) {
+        listener->enable();
     }
 }
 
 void
 PMU::RegularEvent::disable()
 {
-    attachedProbePointList.clear();
+    for (auto &listener : attachedProbePointList) {
+        listener->disable();
+    }
 }
 
 bool

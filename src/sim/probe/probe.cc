@@ -69,7 +69,7 @@ ProbeListenerObject::~ProbeListenerObject()
 }
 
 ProbeListener::ProbeListener(ProbeManager *_manager, const std::string &_name)
-    : manager(_manager), name(_name)
+    : manager(_manager), name(_name), _enabled(true)
 {
     manager->addListener(name, *this);
 }

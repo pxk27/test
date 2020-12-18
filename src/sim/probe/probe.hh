@@ -135,9 +135,27 @@ class ProbeListener
     ProbeListener(ProbeListener&& other) noexcept = delete;
     ProbeListener& operator=(ProbeListener&& other) noexcept = delete;
 
+
+    /** Allow this probe to receive notifications. */
+    void enable() { _enabled = true; }
+
+    /** Disallow this probe to receive notifications. */
+    void disable() { _enabled = false; }
+
+    /**
+     * Whether this listener is allowed to receive notifications.
+     *
+     * @return True if this listener can process notifications.
+     */
+    bool enabled() const { return _enabled; }
+
   protected:
     ProbeManager *const manager;
     const std::string name;
+
+  private:
+    /** Whether this listener processes notifications. */
+    bool _enabled;
 };
 
 /**
@@ -332,7 +350,9 @@ class ProbePointArg : public ProbePoint
     notify(const Arg &arg)
     {
         for (auto l = listeners.begin(); l != listeners.end(); ++l) {
-            (*l)->notify(arg);
+            if ((*l)->enabled()) {
+                (*l)->notify(arg);
+            }
         }
     }
 };

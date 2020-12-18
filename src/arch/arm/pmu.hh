@@ -346,15 +346,13 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
 
     struct RegularEvent : public PMUEvent
     {
-        typedef std::pair<SimObject*, std::string> EventTypeEntry;
-
-        void addMicroarchitectureProbe(SimObject* object,
-            std::string name) {
-
+        void
+        addMicroarchitectureProbe(SimObject* object, std::string name)
+        {
             panic_if(!object,"malformed probe-point"
                 " definition with name %s\n", name);
-
-            microArchitectureEventSet.emplace(object, name);
+            attachedProbePointList.emplace_back(
+                new RegularProbe(this, object, name));
         }
 
       protected:
@@ -372,9 +370,6 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
           protected:
             RegularEvent *parentEvent;
         };
-
-        /** The set of events driving the event value **/
-        std::set<EventTypeEntry> microArchitectureEventSet;
 
         /** Set of probe listeners tapping onto each of the input micro-arch
          *  events which compose this pmu event
