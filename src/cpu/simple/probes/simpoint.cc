@@ -45,7 +45,7 @@ namespace gem5
 {
 
 SimPoint::SimPoint(const SimPointParams &p)
-    : ProbeListenerObject(p),
+    : SimObject(p),
       intervalSize(p.interval),
       intervalCount(0),
       intervalDrift(0),

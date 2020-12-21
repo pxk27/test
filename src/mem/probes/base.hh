@@ -53,13 +53,12 @@ struct BaseMemProbeParams;
  * Base class for memory system probes accepting Packet instances.
  *
  * This is a helper base class for memory system probes that
- * instrument Packet handling. Unlike the ProbeListenerObject base
- * class, this class supports instrumentation of multiple ProbeManager
- * instances. However, it's limited to one probe point name. This
- * enables features like tracing or stack distance analysis of packets
- * from multiple components using the same probe. For example, a stack
- * distance probe could be hooked up to multiple memories in a
- * multi-channel configuration.
+ * instrument Packet handling. Unlike regular SimObjects, this class
+ * supports instrumentation of multiple ProbeManager instances. However,
+ * it's limited to one probe point name. This enables features like
+ * tracing or stack distance analysis of packets from multiple components
+ * using the same probe. For example, a stack distance probe could be
+ * hooked up to multiple memories in a multi-channel configuration.
  */
 class BaseMemProbe : public SimObject
 {

@@ -54,7 +54,7 @@ namespace o3
 {
 
 ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
-    :  ProbeListenerObject(params),
+    :  SimObject(params),
        regEtraceListenersEvent([this]{ regEtraceListeners(); }, name()),
        firstWin(true),
        lastClearedSeqNum(0),
@@ -66,7 +66,7 @@ ElasticTrace::ElasticTrace(const ElasticTraceParams &params)
        traceVirtAddr(params.traceVirtAddr),
        stats(this)
 {
-    cpu = dynamic_cast<CPU *>(params.manager);
+    cpu = dynamic_cast<CPU *>(params.cpu);
     const BaseISA::RegClasses &regClasses =
         cpu->getContext(0)->getIsaPtr()->regClasses();
     zeroReg = regClasses.at(IntRegClass).zeroReg();
@@ -130,25 +130,25 @@ ElasticTrace::regEtraceListeners()
         " probe listeners", curTick(), cpu->numSimulatedInsts());
     // Create new listeners: provide method to be called upon a notify() for
     // each probe point.
-    getProbeManager()->addListener("FetchRequest",
+    cpu->getProbeManager()->addListener("FetchRequest",
         new ProbeListenerArg<ElasticTrace, RequestPtr>(
         this, &ElasticTrace::fetchReqTrace));
-    getProbeManager()->addListener("Execute",
+    cpu->getProbeManager()->addListener("Execute",
         new ProbeListenerArg<ElasticTrace, DynInstConstPtr>(
         this, &ElasticTrace::recordExecTick));
-    getProbeManager()->addListener("ToCommit",
+    cpu->getProbeManager()->addListener("ToCommit",
         new ProbeListenerArg<ElasticTrace, DynInstConstPtr>(
         this, &ElasticTrace::recordToCommTick));
-    getProbeManager()->addListener("Rename",
+    cpu->getProbeManager()->addListener("Rename",
         new ProbeListenerArg<ElasticTrace, DynInstConstPtr>(
         this, &ElasticTrace::updateRegDep));
-    getProbeManager()->addListener("SquashInRename",
+    cpu->getProbeManager()->addListener("SquashInRename",
         new ProbeListenerArg<ElasticTrace, SeqNumRegPair>(
         this, &ElasticTrace::removeRegDepMapEntry));
-    getProbeManager()->addListener("Squash",
+    cpu->getProbeManager()->addListener("Squash",
         new ProbeListenerArg<ElasticTrace, DynInstConstPtr>(
         this, &ElasticTrace::addSquashedInst));
-    getProbeManager()->addListener("Commit",
+    cpu->getProbeManager()->addListener("Commit",
         new ProbeListenerArg<ElasticTrace, DynInstConstPtr>(
         this, &ElasticTrace::addCommittedInst));
     allProbesReg = true;

@@ -43,7 +43,7 @@
 #include "base/output.hh"
 #include "cpu/simple_thread.hh"
 #include "params/SimPoint.hh"
-#include "sim/probe/probe.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5
 {
@@ -79,7 +79,7 @@ struct hash<gem5::BasicBlockRange>
 namespace gem5
 {
 
-class SimPoint : public ProbeListenerObject
+class SimPoint : public SimObject
 {
   public:
     SimPoint(const SimPointParams &params);

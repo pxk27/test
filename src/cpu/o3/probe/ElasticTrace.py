@@ -33,13 +33,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.Probe import *
+from m5.params import *
+from m5.proxy import *
+from m5.SimObject import *
+from m5.objects.BaseCPU import *
 
-class ElasticTrace(ProbeListenerObject):
+class ElasticTrace(SimObject):
     type = 'ElasticTrace'
     cxx_class = 'gem5::o3::ElasticTrace'
     cxx_header = 'cpu/o3/probe/elastic_trace.hh'
 
+    cpu = Param.BaseCPU(Parent.any, "CPU managing this probe")
     # Trace files for the following params are created in the output directory.
     # User is forced to provide these when an instance of this class is created.
     instFetchTraceFile = Param.String(desc="Protobuf trace file name for " \

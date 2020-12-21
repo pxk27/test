@@ -40,24 +40,12 @@
 
 #include "sim/probe/probe.hh"
 
-#include "base/logging.hh"
-#include "params/ProbeListenerObject.hh"
-
 namespace gem5
 {
 
 ProbePoint::ProbePoint(const std::string& _name)
     : name(_name)
 {
-}
-
-ProbeListenerObject::ProbeListenerObject(
-        const ProbeListenerObjectParams &params)
-    : SimObject(params),
-      manager(params.manager->getProbeManager())
-{
-    fatal_if(manager == nullptr,
-        "The probe manager of %s has not been instantiated", name());
 }
 
 bool

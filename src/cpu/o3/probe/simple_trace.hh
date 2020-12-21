@@ -46,7 +46,7 @@
 
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "params/SimpleTrace.hh"
-#include "sim/probe/probe.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5
 {
@@ -54,14 +54,10 @@ namespace gem5
 namespace o3
 {
 
-class SimpleTrace : public ProbeListenerObject
+class SimpleTrace : public SimObject
 {
-
   public:
-    SimpleTrace(const SimpleTraceParams &params) :
-        ProbeListenerObject(params)
-    {
-    }
+    SimpleTrace(const SimpleTraceParams &params) : SimObject(params) {}
 
     /** Register the probe listeners. */
     void regProbeListeners() override;
@@ -69,7 +65,7 @@ class SimpleTrace : public ProbeListenerObject
     std::string
     name() const override
     {
-        return ProbeListenerObject::name() + ".trace";
+        return SimObject::name() + ".trace";
     }
 
   private:

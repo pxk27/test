@@ -59,7 +59,7 @@
 #include "proto/packet.pb.h"
 #include "proto/protoio.hh"
 #include "sim/eventq.hh"
-#include "sim/probe/probe.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5
 {
@@ -90,7 +90,7 @@ class CPU;
  *
  * The output trace can be read in and played back by the TraceCPU.
  */
-class ElasticTrace : public ProbeListenerObject
+class ElasticTrace : public SimObject
 {
 
   public:

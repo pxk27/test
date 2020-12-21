@@ -34,9 +34,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.params import *
-from m5.objects.Probe import ProbeListenerObject
+from m5.SimObject import *
 
-class SimPoint(ProbeListenerObject):
+class SimPoint(SimObject):
     """Probe for collecting SimPoint Basic Block Vectors (BBVs)."""
 
     type = 'SimPoint'
