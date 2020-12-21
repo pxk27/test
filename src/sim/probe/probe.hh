@@ -67,6 +67,7 @@
 #include <vector>
 
 #include "base/compiler.hh"
+#include "base/named.hh"
 #include "base/trace.hh"
 #include "debug/ProbeVerbose.hh"
 #include "sim/sim_object.hh"
@@ -161,19 +162,16 @@ class ProbePoint
  * ProbeManager is a conduit class that lives on each SimObject,
  *  and is used to match up probe listeners with probe points.
  */
-class ProbeManager
+class ProbeManager : public Named
 {
   private:
-    /** Required for sensible debug messages.*/
-    GEM5_CLASS_VAR_USED const SimObject *object;
     /** Vector for name look-up. */
     std::vector<std::shared_ptr<ProbePoint>> points;
 
   public:
-    ProbeManager(SimObject *obj)
-        : object(obj)
-    {}
-    virtual ~ProbeManager() {}
+    /** @param object_name Name of the object to which this manager belongs. */
+    ProbeManager(const std::string &object_name) : Named(object_name) {}
+    virtual ~ProbeManager() = default;
 
     /**
      * @brief Add a ProbeListener to the ProbePoint named by pointName.
@@ -206,12 +204,12 @@ class ProbeManager
     addPoint(const std::string &pp_name)
     {
         DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s.\n",
-            pp_name, object->name());
+            pp_name, name());
 
         for (auto p = points.begin(); p != points.end(); ++p) {
             if ((*p)->getName() == pp_name) {
                 DPRINTFR(ProbeVerbose, "Probes: Call to addPoint \"%s\" to %s "
-                    "failed, already added.\n", pp_name, object->name());
+                    "failed, already added.\n", pp_name, name());
                 return std::shared_ptr<Arg>();
             }
         }
