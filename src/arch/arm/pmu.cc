@@ -447,7 +447,7 @@ PMU::PMUEvent::attachEvent(PMU::CounterState *user)
 }
 
 void
-PMU::PMUEvent::increment(const uint64_t val)
+PMU::PMUEvent::increment(const uint64_t &val)
 {
     for (auto& counter: userCounters) {
         counter->add(val);
@@ -462,12 +462,6 @@ PMU::PMUEvent::detachEvent(PMU::CounterState *user)
     if (userCounters.empty()) {
         disable();
     }
-}
-
-void
-PMU::RegularEvent::RegularProbe::notify(const uint64_t &val)
-{
-    parentEvent->increment(val);
 }
 
 void

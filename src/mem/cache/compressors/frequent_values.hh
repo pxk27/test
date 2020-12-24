@@ -64,26 +64,6 @@ class FrequentValues : public Base
   private:
     class CompData;
 
-    using DataUpdate = BaseCache::DataUpdate;
-
-    class FrequentValuesListener : public ProbeListenerArgBase<DataUpdate>
-    {
-      protected:
-        FrequentValues &parent;
-
-      public:
-        FrequentValuesListener(FrequentValues &_parent)
-          : ProbeListenerArgBase(), parent(_parent)
-        {
-        }
-
-        void
-        notify(const DataUpdate &data_update) override
-        {
-            parent.probeNotify(data_update);
-        }
-    };
-
     /** Whether Huffman encoding is applied to the VFT indices. */
     const bool useHuffmanEncoding;
 
@@ -190,7 +170,7 @@ class FrequentValues : public Base
      *
      * @param data_update The data regarding the entry's contents update.
      */
-    void probeNotify(const DataUpdate &data_update);
+    void probeNotify(const BaseCache::DataUpdate &data_update);
 
     void regProbeListeners() override;
 };

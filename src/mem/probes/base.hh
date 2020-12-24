@@ -73,24 +73,6 @@ class BaseMemProbe : public SimObject
      * Callback to analyse intercepted Packets.
      */
     virtual void handleRequest(const probing::PacketInfo &pkt_info) = 0;
-
-  private:
-    class PacketListener : public ProbeListenerArgBase<probing::PacketInfo>
-    {
-      public:
-        PacketListener(BaseMemProbe &_parent)
-          : ProbeListenerArgBase(), parent(_parent)
-        {}
-
-        void
-        notify(const probing::PacketInfo &pkt_info) override
-        {
-            parent.handleRequest(pkt_info);
-        }
-
-      protected:
-        BaseMemProbe &parent;
-    };
 };
 
 } // namespace gem5

@@ -133,7 +133,7 @@ PIF::CompactorEntry::getPredictedAddresses(unsigned int log_blk_size,
 }
 
 void
-PIF::notifyRetiredInst(const Addr pc)
+PIF::notifyRetiredInst(const Addr &pc)
 {
     // First access to the prefetcher
     if (temporalCompactor.size() == 0) {
@@ -235,15 +235,10 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
 }
 
 void
-PIF::PrefetchListenerPC::notify(const Addr& pc)
-{
-    parent.notifyRetiredInst(pc);
-}
-
-void
 PIF::addEventProbeRetiredInsts(SimObject *obj, const char *name)
 {
-    obj->getProbeManager()->addListener(name, new PrefetchListenerPC(*this));
+    obj->getProbeManager()->addListener(name,
+        new ProbeListenerArg<PIF, Addr>(this, &PIF::notifyRetiredInst));
 }
 
 } // namespace prefetch

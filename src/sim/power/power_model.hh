@@ -132,23 +132,6 @@ class PowerModel : public SimObject
     void thermalUpdateCallback(const Temperature &temp);
 
   protected:
-    /** Listener class to catch thermal events */
-    class ThermalProbeListener : public ProbeListenerArgBase<Temperature>
-    {
-      public:
-        ThermalProbeListener(PowerModel &_pm)
-          : ProbeListenerArgBase(), pm(_pm)
-        {}
-
-        void notify(const Temperature &temp)
-        {
-            pm.thermalUpdateCallback(temp);
-        }
-
-      protected:
-        PowerModel &pm;
-    };
-
     /** Actual power models (one per power state) */
     std::vector<PowerModelState*> states_pm;
 

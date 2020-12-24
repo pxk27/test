@@ -55,7 +55,9 @@ BaseMemProbe::regProbeListeners()
 
     for (int i = 0; i < p.manager.size(); i++) {
         ProbeManager *const mgr(p.manager[i]->getProbeManager());
-        mgr->addListener(p.probe_name, new PacketListener(*this));
+        mgr->addListener(p.probe_name,
+            new ProbeListenerArg<BaseMemProbe, ProbePoints::PacketInfo>(this,
+            &BaseMemProbe::handleRequest));
     }
 }
 

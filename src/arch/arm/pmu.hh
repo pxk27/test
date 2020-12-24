@@ -320,7 +320,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
          * @param the quantity by which to increment the attached counter
          * values
          */
-        virtual void increment(const uint64_t val);
+        virtual void increment(const uint64_t &val);
 
         /**
          * Enable the current event
@@ -351,32 +351,19 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
         {
             panic_if(!object,"malformed probe-point"
                 " definition with name %s\n", name);
-            auto listener = new RegularProbe(this);
+            auto listener = new ProbeListenerArg<RegularEvent, uint64_t>(this,
+                &RegularEvent::increment);
             object->getProbeManager()->addListener(name, listener);
             listeners.emplace_back(listener);
         }
 
       protected:
-        struct RegularProbe: public  ProbeListenerArgBase<uint64_t>
-        {
-            RegularProbe(RegularEvent *parent)
-              : ProbeListenerArgBase(), parentEvent(parent)
-            {}
-
-            RegularProbe() = delete;
-
-            void notify(const uint64_t &val);
-
-          protected:
-            RegularEvent *parentEvent;
-        };
-
         /**
          * Set of probe listeners tapping onto each of the input micro-arch
          * events which compose this pmu event.
          * These pointers are managed by the probe.
          */
-        std::vector<RegularProbe*> listeners;
+        std::vector<ProbeListenerArg<RegularEvent, uint64_t>*> listeners;
 
         void enable() override;
 

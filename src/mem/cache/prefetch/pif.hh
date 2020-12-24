@@ -158,22 +158,7 @@ class PIF : public Queued
          * Updates the prefetcher structures upon an instruction retired
          * @param pc PC of the instruction being retired
          */
-        void notifyRetiredInst(const Addr pc);
-
-        /**
-         * Probe Listener to handle probe events from the CPU
-         */
-        class PrefetchListenerPC : public ProbeListenerArgBase<Addr>
-        {
-          public:
-            PrefetchListenerPC(PIF &_parent)
-              : ProbeListenerArgBase(), parent(_parent)
-            {}
-            void notify(const Addr& pc) override;
-
-          protected:
-            PIF &parent;
-        };
+        void notifyRetiredInst(const Addr &pc);
 
     public:
         PIF(const PIFPrefetcherParams &p);

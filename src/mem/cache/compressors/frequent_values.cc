@@ -262,7 +262,7 @@ FrequentValues::generateCodes()
 }
 
 void
-FrequentValues::probeNotify(const DataUpdate &data_update)
+FrequentValues::probeNotify(const BaseCache::DataUpdate &data_update)
 {
     // Do not update VFT if not sampling
     if (phase == SAMPLING) {
@@ -290,7 +290,8 @@ FrequentValues::regProbeListeners()
 {
     assert(cache != nullptr);
     cache->getProbeManager()->addListener("Data Update",
-        new FrequentValuesListener(*this));
+        new ProbeListenerArg<FrequentValues, BaseCache::DataUpdate>(this,
+        &FrequentValues::probeNotify));
 }
 
 } // namespace compression

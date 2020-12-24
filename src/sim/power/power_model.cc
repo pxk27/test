@@ -103,7 +103,8 @@ void
 PowerModel::regProbePoints()
 {
     this->subsystem->getProbeManager()->addListener("thermalUpdate",
-        new ThermalProbeListener(*this));
+        new ProbeListenerArg<PowerModel, Temperature>(this,
+        &PowerModel::thermalUpdateCallback));
 }
 
 double
