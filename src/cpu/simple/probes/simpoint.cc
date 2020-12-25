@@ -72,7 +72,7 @@ SimPoint::regProbeListeners()
 {
     typedef ProbeListenerArg<SimPoint, std::pair<SimpleThread*,StaticInstPtr>>
         SimPointListener;
-    getProbeManager()->addListener("Commit",
+    getProbeManager().addListener("Commit",
         new SimPointListener(this, &SimPoint::profile));
 }
 

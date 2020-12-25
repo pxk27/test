@@ -289,7 +289,7 @@ void
 FrequentValues::regProbeListeners()
 {
     assert(cache != nullptr);
-    cache->getProbeManager()->addListener("Data Update",
+    cache->getProbeManager().addListener("Data Update",
         new ProbeListenerArg<FrequentValues, BaseCache::DataUpdate>(this,
         &FrequentValues::probeNotify));
 }

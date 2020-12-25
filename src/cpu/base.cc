@@ -331,17 +331,17 @@ BaseCPU::startup()
 void
 BaseCPU::regProbePoints()
 {
-    auto manager = getProbeManager();
-    ppAllCycles = manager->addPoint<ProbePoints::PMU>("Cycles");
-    ppActiveCycles = manager->addPoint<ProbePoints::PMU>("ActiveCycles");
+    ProbeManager &manager = getProbeManager();
+    ppAllCycles = manager.addPoint<ProbePoints::PMU>("Cycles");
+    ppActiveCycles = manager.addPoint<ProbePoints::PMU>("ActiveCycles");
 
-    ppRetiredInsts = manager->addPoint<ProbePoints::PMU>("RetiredInsts");
-    ppRetiredInstsPC = manager->addPoint<ProbePoints::PMU>("RetiredInstsPC");
-    ppRetiredLoads = manager->addPoint<ProbePoints::PMU>("RetiredLoads");
-    ppRetiredStores = manager->addPoint<ProbePoints::PMU>("RetiredStores");
-    ppRetiredBranches = manager->addPoint<ProbePoints::PMU>("RetiredBranches");
+    ppRetiredInsts = manager.addPoint<ProbePoints::PMU>("RetiredInsts");
+    ppRetiredInstsPC = manager.addPoint<ProbePoints::PMU>("RetiredInstsPC");
+    ppRetiredLoads = manager.addPoint<ProbePoints::PMU>("RetiredLoads");
+    ppRetiredStores = manager.addPoint<ProbePoints::PMU>("RetiredStores");
+    ppRetiredBranches = manager.addPoint<ProbePoints::PMU>("RetiredBranches");
 
-    ppSleeping = manager->addPoint<ProbePointArg<bool>>("Sleeping");
+    ppSleeping = manager.addPoint<ProbePointArg<bool>>("Sleeping");
 }
 
 void

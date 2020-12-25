@@ -55,13 +55,13 @@
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
 #include "sim/port.hh"
+#include "sim/probe/probe.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
 {
 
 class EventManager;
-class ProbeManager;
 class SimObjectResolver;
 
 /**
@@ -156,7 +156,7 @@ class SimObject : public EventManager, public Serializable, public Drainable,
     static SimObjectResolver *_objNameResolver;
 
     /** Manager coordinates hooking up probe points with listeners. */
-    ProbeManager *probeManager;
+    ProbeManager probeManager;
 
   protected:
     /**
@@ -180,7 +180,7 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      */
     SimObject(const Params &p);
 
-    virtual ~SimObject();
+    virtual ~SimObject() = default;
 
   public:
     /**
@@ -241,7 +241,7 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      *
      * @ingroup api_simobject
      */
-    ProbeManager *getProbeManager();
+    ProbeManager &getProbeManager();
 
     /**
      * Get a port with a given name and index. This is used at binding time

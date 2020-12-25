@@ -343,10 +343,10 @@ CPU::regProbePoints()
 {
     BaseCPU::regProbePoints();
 
-    auto manager = getProbeManager();
+    ProbeManager &manager = getProbeManager();
     ppInstAccessComplete =
-        manager->addPoint<ProbePointArg<PacketPtr>>("InstAccessComplete");
-    ppDataAccessComplete = manager->addPoint<ProbePointArg<
+        manager.addPoint<ProbePointArg<PacketPtr>>("InstAccessComplete");
+    ppDataAccessComplete = manager.addPoint<ProbePointArg<
         std::pair<DynInstPtr, PacketPtr>>>("DataAccessComplete");
 
     fetch.regProbePoints();

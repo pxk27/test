@@ -2505,11 +2505,11 @@ BaseCache::CacheStats::regStats()
 void
 BaseCache::regProbePoints()
 {
-    auto manager = this->getProbeManager();
-    ppHit = manager->addPoint<ProbePointArg<PacketPtr>>("Hit");
-    ppMiss = manager->addPoint<ProbePointArg<PacketPtr>>("Miss");
-    ppFill = manager->addPoint<ProbePointArg<PacketPtr>>("Fill");
-    ppDataUpdate = manager->addPoint<ProbePointArg<DataUpdate>>("Data Update");
+    ProbeManager &manager = getProbeManager();
+    ppHit = manager.addPoint<ProbePointArg<PacketPtr>>("Hit");
+    ppMiss = manager.addPoint<ProbePointArg<PacketPtr>>("Miss");
+    ppFill = manager.addPoint<ProbePointArg<PacketPtr>>("Fill");
+    ppDataUpdate = manager.addPoint<ProbePointArg<DataUpdate>>("Data Update");
 }
 
 ///////////////

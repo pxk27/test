@@ -151,10 +151,10 @@ std::string Fetch::name() const { return cpu->name() + ".fetch"; }
 void
 Fetch::regProbePoints()
 {
-    auto manager = cpu->getProbeManager();
-    ppFetch = manager->template addPoint<ProbePointArg<DynInstPtr>>("Fetch");
+    ProbeManager &manager = cpu->getProbeManager();
+    ppFetch = manager.template addPoint<ProbePointArg<DynInstPtr>>("Fetch");
     ppFetchRequestSent =
-        manager->template addPoint<ProbePointArg<RequestPtr>>("FetchRequest");
+        manager.template addPoint<ProbePointArg<RequestPtr>>("FetchRequest");
 }
 
 Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)

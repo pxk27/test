@@ -353,7 +353,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
                 " definition with name %s\n", name);
             auto listener = new ProbeListenerArg<RegularEvent, uint64_t>(this,
                 &RegularEvent::increment);
-            object->getProbeManager()->addListener(name, listener);
+            object->getProbeManager().addListener(name, listener);
             listeners.emplace_back(listener);
         }
 

@@ -237,7 +237,7 @@ PIF::calculatePrefetch(const PrefetchInfo &pfi,
 void
 PIF::addEventProbeRetiredInsts(SimObject *obj, const char *name)
 {
-    obj->getProbeManager()->addListener(name,
+    obj->getProbeManager().addListener(name,
         new ProbeListenerArg<PIF, Addr>(this, &PIF::notifyRetiredInst));
 }
 

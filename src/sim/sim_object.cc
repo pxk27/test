@@ -35,7 +35,6 @@
 #include "base/match.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
-#include "sim/probe/probe.hh"
 
 namespace gem5
 {
@@ -56,20 +55,14 @@ SimObjectResolver *SimObject::_objNameResolver = NULL;
 // SimObject constructor: used to maintain static simObjectList
 //
 SimObject::SimObject(const Params &p)
-    : EventManager(getEventQueue(p.eventq_index)),
-      statistics::Group(nullptr), Named(p.name),
-      _params(p)
+  : EventManager(getEventQueue(p.eventq_index)),
+    statistics::Group(nullptr), Named(p.name),
+    probeManager(name()), _params(p)
 {
 #ifdef DEBUG
     doDebugBreak = false;
 #endif
     simObjectList.push_back(this);
-    probeManager = new ProbeManager(name());
-}
-
-SimObject::~SimObject()
-{
-    delete probeManager;
 }
 
 void
@@ -116,7 +109,7 @@ SimObject::regProbeListeners()
 {
 }
 
-ProbeManager *
+ProbeManager &
 SimObject::getProbeManager()
 {
     return probeManager;

@@ -105,9 +105,9 @@ BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
 void
 BPredUnit::regProbePoints()
 {
-    auto manager = getProbeManager();
-    ppBranches = manager->addPoint<ProbePoints::PMU>("Branches");
-    ppMisses = manager->addPoint<ProbePoints::PMU>("Misses");
+    ProbeManager &manager = getProbeManager();
+    ppBranches = manager.addPoint<ProbePoints::PMU>("Branches");
+    ppMisses = manager.addPoint<ProbePoints::PMU>("Misses");
 }
 
 void

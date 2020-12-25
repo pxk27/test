@@ -69,9 +69,10 @@ void
 SimpleTrace::regProbeListeners()
 {
     typedef ProbeListenerArg<SimpleTrace, DynInstConstPtr> DynInstListener;
-    getProbeManager()->addListener("Commit", new DynInstListener(this,
+    ProbeManager &manager = getProbeManager();
+    manager.addListener("Commit", new DynInstListener(this,
         &SimpleTrace::traceCommit));
-    getProbeManager()->addListener("Fetch", new DynInstListener(this,
+    manager.addListener("Fetch", new DynInstListener(this,
         &SimpleTrace::traceFetch));
 }
 
