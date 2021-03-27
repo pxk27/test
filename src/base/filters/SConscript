@@ -42,5 +42,7 @@ Source('multi_bloom_filter.cc')
 Source('perfect_bloom_filter.cc')
 
 GTest('base.test', 'base.test.cc', with_tag('gem5 simobject'))
+GTest('block_bloom_filter.test', 'block_bloom_filter.test.cc',
+    'block_bloom_filter.cc', with_tag('gem5 simobject'))
 GTest('perfect_bloom_filter.test', 'perfect_bloom_filter.test.cc',
     'perfect_bloom_filter.cc', with_tag('gem5 simobject'))
