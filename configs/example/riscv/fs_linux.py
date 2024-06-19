@@ -81,8 +81,9 @@ requires(isa_required=ISA.RISCV)
 # of 25 March 2021).
 #
 # Options (Full System):
-# --kernel (required):          Bootloader + kernel binary (e.g. bbl with
-#                               linux kernel payload)
+# --kernel (required):          Bootloader + kernel binary if no --bootloader
+#                               is specified, kernel only binary otherwise
+# --bootloader (optional):      Bootloader (OpenSBI: fw_jump.elf)
 # --disk-image (optional):      Path to disk image file. Not needed if using
 #                               ramfs (might run into issues though).
 # --virtio-rng (optional):      Enable VirtIO entropy source device
@@ -144,6 +145,12 @@ parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser, ISA.RISCV)
 Options.addFSOptions(parser)
 parser.add_argument(
+    "--bootloader",
+    action="store",
+    type=str,
+    help="File that contains the bootloader",
+)
+parser.add_argument(
     "--virtio-rng", action="store_true", help="Enable VirtIORng device"
 )
 parser.add_argument(
@@ -193,8 +200,12 @@ if args.semihosting:
 if args.bare_metal:
     system.workload = RiscvBareMetal(**workload_args)
     system.workload.bootloader = args.kernel
-else:
+elif not args.bootloader:
     system.workload = RiscvLinux(**workload_args)
+    system.workload.object_file = args.kernel
+else:
+    system.workload = RiscvBootloaderKernelWorkload(**workload_args)
+    system.workload.bootloader_filename = args.bootloader
     system.workload.object_file = args.kernel
 
 system.iobus = IOXBar()
