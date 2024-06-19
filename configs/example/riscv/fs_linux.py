@@ -134,6 +134,11 @@ def generateDtb(system):
             else:
                 root.append(node)
 
+    node = FdtNode("chosen")
+    node.append(FdtPropertyStrings("bootargs", [system.workload.command_line]))
+    node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
+    root.append(node)
+
     fdt = Fdt()
     fdt.add_rootnode(root)
     fdt.writeDtsFile(path.join(m5.options.outdir, "device.dts"))
@@ -332,15 +337,7 @@ for cpu in system.cpu:
 # --------------------------- DTB Generation --------------------------- #
 
 if not args.bare_metal:
-    if args.dtb_filename:
-        system.workload.dtb_filename = args.dtb_filename
-    else:
-        generateDtb(system)
-        system.workload.dtb_filename = path.join(
-            m5.options.outdir, "device.dtb"
-        )
-
-    # Default DTB address if bbl is bulit with --with-dts option
+    # Default DTB address if bbl is built with --with-dts option
     system.workload.dtb_addr = 0x87E00000
 
     # Linux boot command flags
@@ -349,6 +346,15 @@ if not args.bare_metal:
     else:
         kernel_cmd = ["console=ttyS0", "root=/dev/vda", "ro"]
         system.workload.command_line = " ".join(kernel_cmd)
+
+    # DTB filename (auto-generate if not specified)
+    if args.dtb_filename:
+        system.workload.dtb_filename = args.dtb_filename
+    else:
+        generateDtb(system)
+        system.workload.dtb_filename = path.join(
+            m5.options.outdir, "device.dtb"
+        )
 
 # ---------------------------- Default Setup --------------------------- #
 
