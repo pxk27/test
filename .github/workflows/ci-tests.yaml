@@ -142,7 +142,8 @@ jobs:
           ci-tests-${{ github.run_number }}-testlib-build-\
             $(echo '${{ matrix.build-target }}' \
             | sed 's/\//-/g' | sed 's/\./-/g')
-        path: '*${{ matrix.build-target }}'
+        working-directory: ${{ github.workspace }}
+        path: '*./build/*/gem5.opt'
 
   testlib-tests:
     # This job runs the testlib quick tests.
@@ -163,6 +164,7 @@ jobs:
       # Download all the gem5 binaries needed by the quick tests.
     - uses: actions/download-artifact@v4
       with:
+        working-directory: ${{ github.workspace }}
         pattern: ci-tests-${{ github.run_number }}-testlib-build-*
         merge-multiple: true
 
