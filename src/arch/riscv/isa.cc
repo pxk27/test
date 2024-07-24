@@ -665,15 +665,6 @@ ISA::readMiscReg(RegIndex idx)
             }
             return nstatus;
         }
-      case MISCREG_FFLAGS_EXE:
-        {
-            return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
-        }
-      case MISCREG_FCSR:
-        {
-            return readMiscRegNoEffect(MISCREG_FFLAGS) |
-                  (readMiscRegNoEffect(MISCREG_FRM) << FRM_OFFSET);
-        }
 
       default:
         // Try reading HPM counters
@@ -838,7 +829,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 }
 
                 setMiscRegNoEffect(idx, val & ~wpri_mask);
-
+            }
+            break;
           case MISCREG_HGATP:
             {
                 tc->getMMUPtr()->flushAll();

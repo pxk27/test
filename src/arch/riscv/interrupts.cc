@@ -41,6 +41,7 @@ Interrupts::Interrupts(const Params &p) : BaseInterrupts(p),
                                           ie(0),
                                           hvip(0),
                                           nmi_cause(p.nmi_cause)
+{
     for (uint8_t i = 0;
         i < p.port_local_interrupt_pins_connection_count;
         ++i) {

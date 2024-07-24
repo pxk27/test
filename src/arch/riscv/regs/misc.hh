@@ -1263,7 +1263,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
          true}},
     {CSR_MNSTATUS,
         {"mnstatus", MISCREG_MNSTATUS, rvTypeFlags(RV64, RV32),
-         isaExtsFlags(), true}}
+         isaExtsFlags(), true}},
 
     // H-extension CSR -> MISCREG mappings
     {CSR_MTINST,
@@ -1345,7 +1345,7 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
         isaExtsFlags('h')}},
     {CSR_VSATP,
         {"vsatp", MISCREG_VSATP, rvTypeFlags(RV64),
-        isaExtsFlags('h')}}
+        isaExtsFlags('h')}},
 };
 
 /**
