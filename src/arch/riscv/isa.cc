@@ -68,7 +68,8 @@ namespace gem5
 namespace RiscvISA
 {
 
-[[maybe_unused]] const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
+[[maybe_unused]]
+const std::array<const char *, NUM_MISC_AND_HELPER_REGS> MiscRegNames = {{
     [MISCREG_PRV]           = "PRV",
     [MISCREG_ISA]           = "ISA",
     [MISCREG_VENDORID]      = "VENDORID",
@@ -278,6 +279,8 @@ namespace RiscvISA
     [MISCREG_HPMCOUNTER29H]  = "HPMCOUNTER29H",
     [MISCREG_HPMCOUNTER30H]  = "HPMCOUNTER30H",
     [MISCREG_HPMCOUNTER31H]  = "HPMCOUNTER31H",
+
+    [HELPER_FFLAGS_EXE] = "FFLAGS_EXE",
 }};
 
 namespace
@@ -667,6 +670,11 @@ ISA::readMiscReg(RegIndex idx)
             return nstatus;
         }
 
+      case HELPER_FFLAGS_EXE:
+        {
+            return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
+        }
+
       default:
         // Try reading HPM counters
         // As a placeholder, all HPM counters are just cycle counters
@@ -953,6 +961,14 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 setMiscRegNoEffect(MISCREG_NMIE,
                     (RegVal)nstatus.nmie | readMiscRegNoEffect(MISCREG_NMIE));
                 setMiscRegNoEffect(idx, val);
+            }
+            break;
+
+          case HELPER_FFLAGS_EXE:
+            {
+                RegVal new_val = readMiscRegNoEffect(MISCREG_FFLAGS);
+                new_val |= (val & FFLAGS_MASK);
+                setMiscRegNoEffect(MISCREG_FFLAGS, new_val);
             }
             break;
           default:
