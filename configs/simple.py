@@ -32,7 +32,7 @@ board = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-binary = BinaryResource(local_path="tests/test-progs/sum/bin/sum")
+binary = BinaryResource(local_path="tests/test-progs/sum/bin/x86/linux/sum")
 board.set_se_binary_workload(binary)
 
 simulator = Simulator(board=board)
