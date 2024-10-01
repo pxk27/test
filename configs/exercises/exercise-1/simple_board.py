@@ -8,7 +8,7 @@ from gem5.isas import ISA
 from gem5.resources.resource import BinaryResource
 from gem5.simulate.simulator import Simulator
 
-cache_enabled = (input("Configure system with cache?: ").lower() == "yes")
+cache_enabled = (input("Configure board with cache?: ").lower() == "yes")
 if cache_enabled:
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="16kB",
