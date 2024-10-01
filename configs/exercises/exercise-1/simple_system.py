@@ -25,7 +25,7 @@ system.cpu = X86TimingSimpleCPU()
 # Create memory bus
 system.membus = SystemXBar()
 
-cache_enabled = (input("Configure CPU with cache?: ") == "yes")
+cache_enabled = (input("Configure system with cache?: ").lower() == "yes")
 if cache_enabled:
     # Create L1 cache
     system.cpu.icache = L1ICache()
