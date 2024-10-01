@@ -19,7 +19,7 @@ else:
     cache_hierarchy = NoCache()
 
 # Give ourselves 4GB of the best DDR4 the simulator has to offer
-memory = SingleChannelDDR4_2400(size="4GB")
+memory = SingleChannelDDR4_2400(size="16GB")
 
 # X86 CPU
 processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=1)

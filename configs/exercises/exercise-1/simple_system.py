@@ -15,9 +15,9 @@ system.clk_domain = SrcClockDomain()
 system.clk_domain.clock = '3GHz'
 system.clk_domain.voltage_domain = VoltageDomain()
 
-# Give ourselves 4GB of RAM
+# Set RAM size to 16GB
 system.mem_mode = 'timing'
-system.mem_ranges = [AddrRange('4GB')]
+system.mem_ranges = [AddrRange('16GB')]
 
 # Create a simple x86 timing CPU core
 system.cpu = X86TimingSimpleCPU()
@@ -64,7 +64,7 @@ system.system_port = system.membus.cpu_side_ports
 
 # Create memory controller and DRAM configuration
 system.mem_ctrl = MemCtrl()
-system.mem_ctrl.dram = DDR3_1600_8x8()
+system.mem_ctrl.dram = DDR4_2400_8x8()
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
