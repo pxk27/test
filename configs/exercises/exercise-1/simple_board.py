@@ -18,7 +18,7 @@ if cache_enabled:
 else:
     cache_hierarchy = NoCache()
 
-# Give ourselves 4GB of the best DDR4 the simulator has to offer
+# Give ourselves 16GB of the best DDR4 the simulator has to offer
 memory = SingleChannelDDR4_2400(size="16GB")
 
 # X86 CPU
