@@ -175,3 +175,14 @@ class WeightedLRURP(LRURP):
     type = "WeightedLRURP"
     cxx_class = "gem5::replacement_policy::WeightedLRU"
     cxx_header = "mem/cache/replacement_policies/weighted_lru_rp.hh"
+
+
+class SimObjectUnitTester(SimObject):
+    type = "SimObjectUnitTester"
+    cxx_header = "mem/cache/replacement_policies/sim_object_unit_tester.hh"
+    cxx_class = "gem5::replacement_policy::SimObjectUnitTester"
+
+    replacement_policy = Param.BaseReplacementPolicy(
+        "Replacement policy to test"
+    )
+    num_entries = Param.Int("Total number of entries to instantiate")

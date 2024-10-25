@@ -49,6 +49,7 @@ namespace replacement_policy
 
 class FIFO : public Base
 {
+  friend class SimObjectUnitTester;
   protected:
     /** FIFO-specific implementation of replacement data. */
     struct FIFOReplData : ReplacementData

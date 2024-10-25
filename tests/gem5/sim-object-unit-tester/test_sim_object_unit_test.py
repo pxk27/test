@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2018 Inria
+# Copyright (c) 2024 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,27 +24,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from testlib import *
 
-SimObject('ReplacementPolicies.py', sim_objects=[
-    'BaseReplacementPolicy', 'DuelingRP', 'FIFORP', 'SecondChanceRP',
-    'LFURP', 'LRURP', 'BIPRP', 'MRURP', 'RandomRP', 'BRRIPRP', 'SHiPRP',
-    'SHiPMemRP', 'SHiPPCRP', 'TreePLRURP', 'WeightedLRURP',
-    "SimObjectUnitTester"])
-
-Source('bip_rp.cc')
-Source('brrip_rp.cc')
-Source('dueling_rp.cc')
-Source('fifo_rp.cc')
-Source('lfu_rp.cc')
-Source('lru_rp.cc')
-Source('mru_rp.cc')
-Source('random_rp.cc')
-Source('second_chance_rp.cc')
-Source('ship_rp.cc')
-Source('tree_plru_rp.cc')
-Source('weighted_lru_rp.cc')
-Source("sim_object_unit_tester.cc")
-
-
-GTest('replaceable_entry.test', 'replaceable_entry.test.cc')
+gem5_verify_config(
+    name="first",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "sim-object-unit-tester",
+        "configs",
+        "first.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
