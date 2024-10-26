@@ -47,6 +47,8 @@ namespace replacement_policy
 
 class LRU : public Base
 {
+  friend class LRUTester;
+  friend class SimObjectUnitTester;
   protected:
     /** LRU-specific implementation of replacement data. */
     struct LRUReplData : ReplacementData

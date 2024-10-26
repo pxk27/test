@@ -42,3 +42,20 @@ gem5_verify_config(
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
+
+gem5_verify_config(
+    name="lru",
+    fixtures=(),
+    verifiers=[],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "sim-object-unit-tester",
+        "configs",
+        "lru.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)

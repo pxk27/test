@@ -18,24 +18,43 @@ namespace replacement_policy{
 class SimObjectUnitTester : public SimObject
 {
   private:
-  EventFunctionWrapper nextEvent;
+    EventFunctionWrapper nextEvent;
+  protected:
   // the type of ReplacementCandidates is std::vector<ReplaceableEntry*>
   ReplacementCandidates candidates;
-  replacement_policy::Base* replacement_policy;
+  replacement_policy::Base* replacementPolicy;
   int numEntries;
+  std::string replacementPolicyName;
 
   void processNextEvent();
-  bool checkCorrectness(/*FIFO* */);
-  // bool checkCorrectness(LRU*);
-  // bool checkCorrectness(Base*);
 
-  // template<class T>
-  // bool checkCorrectness();
+  bool checkCorrectness(FIFO*);
+  bool checkCorrectness(LRU*);
+  // bool checkCorrectnessFIFO();
+  // bool checkCorrectnessLRU();
+  bool checkCorrectness(Base*);
+
+  // virtual bool checkCorrectness();
+
+  void freeCandidates();
 
 public:
   SimObjectUnitTester(const SimObjectUnitTesterParams& params);
   virtual void startup() override;
 };
+
+
+// class FIFOTester : public SimObjectUnitTester{
+//   private:
+//     virtual bool checkCorrectness() override;
+// };
+
+// class LRUTester : public SimObjectUnitTester{
+//   private:
+//     virtual bool checkCorrectness() override;
+// };
+
+
 
 } //namespace replacement_policy
 

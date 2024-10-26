@@ -186,3 +186,15 @@ class SimObjectUnitTester(SimObject):
         "Replacement policy to test"
     )
     num_entries = Param.Int("Total number of entries to instantiate")
+    name = Param.String("Name of replacement policy")
+
+
+# class FIFOTester(SimObject):
+#     type = "FIFOTester"
+#     cxx_header = "mem/cache/replacement_policies/sim_object_unit_tester.hh"
+#     cxx_class = "gem5::replacement_policy::FIFOTester"
+
+# class LRUTester(SimObject):
+#     type = "LRUTester"
+#     cxx_header = "mem/cache/replacement_policies/sim_object_unit_tester.hh"
+#     cxx_class = "gem5::replacement_policy::LRUTester"
