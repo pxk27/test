@@ -58,6 +58,10 @@ from gem5.isas import (
     ISA,
     get_isa_from_str,
 )
+from gem5.resources.resource import (
+    BinaryResource,
+    obtain_resource,
+)
 from gem5.simulate.simulator import Simulator
 
 isa_resource_id_map = {
@@ -125,41 +129,12 @@ motherboard = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-binary = None
-
-########## Remove this block  when resources are in gem5-resources ############                                                                 ####
-from pathlib import Path
-
-resource_id_to_path_map = {
-    "x86-m5-exit": Path(
-        Path(__file__).parent.parent, "m5_exit", "bin", "x86-m5-exit"
-    ),
-    "arm-m5-exit": Path(
-        Path(__file__).parent.parent, "m5_exit", "bin", "arm-m5-exit"
-    ),
-    "riscv-m5-exit": Path(
-        Path(__file__).parent.parent, "m5_exit", "bin", "riscv-m5-exit"
-    ),
-}
-
-
-from gem5.resources.resource import BinaryResource
-
-binary = BinaryResource(
-    local_path=resource_id_to_path_map[isa_resource_id_map[isa]].as_posix()
+binary = obtain_resource(
+    resource_id=isa_resource_id_map[isa],
+    version=resource_id_version_map[isa_resource_id_map[isa]],
+    resource_directory=args.resource_directory,
 )
-###############################################################################
 
-############# Uncomment this when resources are in gem5-resources #############
-###############################################################################
-# binary = Resource(
-#    resource_id=isa_resource_id_map[isa],
-#    version=resource_id_version_map[isa_resource_id_map[isa]],
-#    resource_directory=args.resource_directory,
-# )
-###############################################################################
-
-assert binary is not None, "Binary resource is None."
 assert isinstance(
     binary, BinaryResource
 ), "binary is not of type BinaryResource."
