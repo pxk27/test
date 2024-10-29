@@ -32,6 +32,7 @@ from ...components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
 from ...components.memory.single_channel import SingleChannelDDR3_1600
+# from ...components.memory.single_channel import DIMM_DDR5_4400_x86_Holes
 from ...components.processors.cpu_types import CPUTypes
 from ...components.processors.simple_processor import SimpleProcessor
 from ...isas import ISA
@@ -77,7 +78,8 @@ class X86DemoBoard(X86Board):
             "real-world system. Use with caution."
         )
 
-        memory = SingleChannelDDR3_1600(size="2GB")
+        memory = SingleChannelDDR3_1600(size="3GB")
+        # memory = DIMM_DDR5_4400_x86_Holes(size="9GB")
         processor = SimpleProcessor(
             cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4
         )

@@ -43,7 +43,8 @@ from gem5.components.boards.x86_board import X86Board
 from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
     MESITwoLevelCacheHierarchy,
 )
-from gem5.components.memory.single_channel import SingleChannelDDR4_2400
+# from gem5.components.memory.single_channel import SingleChannelDDR4_2400
+from gem5.components.memory.single_channel import DIMM_DDR5_4400_x86_Holes
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
@@ -77,7 +78,8 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 )
 
 # Main memory
-memory = SingleChannelDDR4_2400(size="3GiB")
+memory = DIMM_DDR5_4400_x86_Holes(size="9GiB")
+# SingleChannelDDR4_2400(size="3GiB")
 
 # This is a switchable CPU. We first boot Ubuntu using KVM, then the guest
 # will exit the simulation by calling "m5 exit" (see the `command` variable
@@ -116,6 +118,7 @@ board = X86Board(
 # output.
 command = (
     "m5 exit;"
+    + "cat /proc/meminfo;"
     + "echo 'This is running on Timing CPU cores.';"
     + "sleep 1;"
     + "m5 exit;"

@@ -1001,7 +1001,7 @@ class AddrRange(ParamValue):
         if self.modulo_by == 0:
             return int(self.end) - int(self.start) >> self.intlvBits
 
-        return (int(self.end) - int(self.start)) / self.modulo_by
+        return int((int(self.end) - int(self.start)) / int(self.modulo_by))
 
     @classmethod
     def cxx_predecls(cls, code):
@@ -1081,6 +1081,16 @@ class AddrRange(ParamValue):
         pybind_exclude = list([r.getValue() for r in ranges])
         pybind_include = self.getValue().exclude(pybind_exclude)
 
+        # when is this used?
+        # add modulo and hole support here. 
+        # temp_list = list()
+        
+        # for r in pybind_include:
+        #     if r.modulo_by:
+        #         temp_list.append(AddrRange(r.start(), r.end(), r.modulo_by, 
+        #                                    r.lowest_modulo_bit, r.invlMatch(), 
+        #                                    r.holes()))
+        
         return list([AddrRange(r.start(), r.end()) for r in pybind_include])
 
     def is_subset(self, addr_range):
