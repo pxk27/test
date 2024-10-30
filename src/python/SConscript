@@ -330,8 +330,10 @@ PySource('gem5.utils.multiprocessing',
 PySource('gem5.utils.gema', 'gem5/utils/gema/__init__.py')
 PySource('gem5.utils.gema', 'gem5/utils/gema/__main__.py')
 PySource('gem5.utils.gema', 'gem5/utils/gema/config.py')
+PySource('gem5.utils.gema', 'gem5/utils/gema/options.py')
 PySource('gem5.utils.gema', 'gem5/utils/gema/manager.py')
-PySource('gem5.utils.gema', 'gem5/utils/gema/server.py')
+PySource('gem5.utils.gema', 'gem5/utils/gema/rpc.py')
+PySource('gem5.utils.gema', 'gem5/utils/gema/rpc_data.py')
 
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')

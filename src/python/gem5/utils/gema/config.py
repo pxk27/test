@@ -24,203 +24,366 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import inspect
-from datetime import datetime
+from __future__ import annotations
 
-from gem5.components import *
-from gem5.components.boards.simple_board import SimpleBoard
-from gem5.components.boards.x86_board import X86Board
-from gem5.components.cachehierarchies.classic.no_cache import NoCache
-from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import (
-    PrivateL1CacheHierarchy,
-)
-from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
-    PrivateL1PrivateL2CacheHierarchy,
-)
-from gem5.components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
-    PrivateL1SharedL2CacheHierarchy,
-)
-from gem5.components.memory import *
-from gem5.components.memory import (
-    multi_channel,
-    single_channel,
-)
-from gem5.components.processors.cpu_types import *
-from gem5.components.processors.cpu_types import get_cpu_types_str_set
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.resources.resource import *
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from gem5.utils.gema import Gema
 
-class GemaConfigRetreiver:
-    """Obtains available configuration options from gem5."""
-
-    def __init__(self, root) -> None:
-        """Initialize the gEMA configuration retreiver class."""
-        self.root = root
-        self.single_channel_memory = [
-            name
-            for name, obj in inspect.getmembers(single_channel)
-            if inspect.isfunction(obj)
-        ]
-        self.multi_channel_memory = [
-            name
-            for name, obj in inspect.getmembers(multi_channel)
-            if inspect.isfunction(obj)
-        ]
-        self.cache_types = [
-            "NoCache",
-            "PrivateL1SharedL2CacheHierarchy",
-            "PrivateL1PrivateL2CacheHierarchy",
-            "PrivateL1CacheHierarchy",
-        ]  # TODO: Fetch the cache types dynamically.
-
-    def _get_init_parameters(self, *classes):
-        """Returns a dictionary of init parameters from a class."""
-        params_dict = {
-            cls.__name__: [
-                param
-                for param in inspect.signature(cls.__init__).parameters
-                if param not in ("self", "cls", "*args", "**kwargs")
-            ]
-            for cls in classes
-        }
-        return params_dict
-
-    def get_config_options(self):
-        """Obtains all available configuration options from the standard library."""
-        cache_classes = [
-            globals()[name] for name in self.cache_types if name in globals()
-        ]
-        classes_to_inspect = [
-            SimpleBoard,
-            X86Board,
-            SimpleProcessor,
-            *cache_classes,
-        ]
-        try:
-            class_params = self._get_init_parameters(*classes_to_inspect)
-
-            config = {}
-            for board_class in [SimpleBoard, X86Board]:
-                board_name = board_class.__name__
-                config[board_name] = {
-                    "board": class_params[board_name][0],
-                    "memory": self.single_channel_memory
-                    + self.multi_channel_memory,
-                    "processor": list(get_cpu_types_str_set()),
-                    "cache_hierarchy": {
-                        name: class_params[name]
-                        for name in self.cache_types
-                        if name in class_params
-                    },
-                }
-            return config
-        except KeyError as e:
-            print(
-                f"Key error: {e} - Check if cache class names are correct and imported"
-            )
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+from gem5.utils.gema.options import *
+from gem5.utils.gema.rpc_data import *
 
 
 class GemaConfigGenerator:
-    """Configures a user defined simulation object."""
+    """A class responsible for creating and managing gem5 simulation configurations.
 
-    def __init__(self, root):
-        """Initialize the gEMA configuration generator class."""
+    This class provides functionality to create, modify, and generate gem5 simulation
+    configurations through a high-level interface. It manages multiple configuration
+    objects and provides methods to set various simulation parameters including board,
+    processor, memory, and cache specifications.
+    """
+
+    def __init__(self, root: Gema):
         self.root = root
+        self.configs = []
 
-    def generate_config(self, data: dict):
-        """Returns a configuration given a provided json."""
-        brd = eval(data["board"]["type"])
-        clk = f"{data['board']['clk']}GHz"
-        proc = eval(data["processor"]["type"])
-        cpu_type = CPUTypes[data["processor"]["cpu"].upper()]
-        isa = ISA[data["processor"]["isa"].upper()]
-        ncores = int(data["processor"]["ncores"])
-        mem_type = eval(data["memory"]["type"])
-        msize = f"{data['memory']['size']}MB"
-        cache = self.get_cache_configuration(data["cache"])
+    def add_config(
+        self, config_id: int, d_data: Optional[dict] = None
+    ) -> bool:
+        """Create and add a new simulation configuration to the manager.
 
-        configuration = brd(
-            clk_freq=clk,
-            processor=proc(cpu_type=cpu_type, isa=isa, num_cores=ncores),
-            memory=mem_type(size=msize),
-            cache_hierarchy=cache,
-        )
+        This method creates a new GemaConfiguration object with the specified ID.
+        If dictionary data is provided, it will be used to populate the configuration.
 
-        resource_type = data["resource"][0]
-        resource = data["resource"][1]
-        self.set_resource(configuration, resource_type, resource)
+        Args:
+            config_id (int): Unique identifier for the new configuration.
+            d_data (Optional[dict]): Dictionary containing initial configuration data.
+                                   If provided, this will be used to populate the configuration.
 
-        self.print_config_summary(
-            brd, clk, proc, cpu_type, isa, ncores, mem_type, msize, cache
-        )
+        Returns:
+            bool: True if the configuration was successfully added, False if a configuration
+                 with the given ID already exists.
+        """
+        if self._get_config_by_id(config_id) != None:
+            return False
 
-        return configuration
-
-    def save_config(self, id, data=None):
-        if self.root.sims.get(f"config_{id}") is not None:
-            if data is None:
-                print(
-                    f"Regenerating configuration for id {id} using previously saved configuration."
-                )
-                data = self.root.sims.get(f"config_{id}").get("config")
-            else:
-                print(
-                    f"Regenerating configuration for id {id} using new data."
-                )
-            del self.root.sims[f"config_{id}"]
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        tmp_storage = dict(generated_on=timestamp, config=data, simulations=[])
-        self.root.sims[f"config_{id}"] = tmp_storage
-
-    def get_cache_configuration(self, cache_config):
-        cache_opts = {
-            "class": globals()[cache_config["type"]],
-            "l1d_size": f"{cache_config['l1d_size']}KiB",
-            "l1i_size": f"{cache_config['l1i_size']}KiB",
-            "l2_size": f"{cache_config['l2_size']}KiB",
-            "l1d_assoc": cache_config["l1d_assoc"],
-            "l1i_assoc": cache_config["l1i_assoc"],
-            "l2_assoc": cache_config["l2_assoc"],
-        }
-
-        cache_params = [
-            param
-            for param in inspect.signature(
-                cache_opts["class"].__init__
-            ).parameters
-            if param not in ("self", "cls", "*args", "**kwargs")
-        ]
-
-        init_params = {
-            key: value
-            for key, value in cache_opts.items()
-            if key in cache_params
-        }
-
-        try:
-            return cache_opts["class"](**init_params)
-        except ValueError:
-            print(f"Failed to generate cache: {cache_opts['class']}")
-
-    def set_resource(self, config, resource_type, resource):
-        """Sets the resource of a given configuration.
-        default: uses gem5-resources, custom: sets a path to a binary"""
-        if resource_type == "default":
-            config.set_se_binary_workload(obtain_resource(resource))
-        elif resource_type == "custom":
-            config.set_se_binary_workload(BinaryResource(resource))
+        if d_data != None:
+            self.configs.append(
+                self._convert_dict_to_gema(config_id=config_id, data=d_data)
+            )
         else:
-            print("Invalid resource type specified")
+            self.configs.append(GemaConfiguration(config_id=config_id))
+        return True
 
-    def print_config_summary(
-        self, board, clk, proc, cpu, isa, cores, mem_type, mem_size, cache
-    ):
-        """Prints the selected configuration."""
-        print("\n======CONFIGURATION======")
-        print(
-            f"Board: {board}, \nClock Frequency: {clk}, \nProcessor: {proc} \nCPU Type: {cpu}, \nISA: {isa}, "
-            f"\nNumber of Cores: {cores}, \nMemory Type: {mem_type}, \nMemory Size: {mem_size}, \nCache Type: {cache}\n"
+    def _convert_dict_to_gema(
+        self, config_id: int, data: dict
+    ) -> GemaConfiguration:
+        """Convert a dictionary representation into a GemaConfiguration object.
+
+        This method takes a dictionary containing configuration parameters and creates
+        a fully populated GemaConfiguration object with all its components.
+
+        Args:
+            config_id (int): The unique identifier for the configuration.
+            data (dict): Dictionary containing configuration parameters for all components
+                        (board, processor, memory, cache, and resource).
+
+        Returns:
+            GemaConfiguration: A fully populated configuration object with all specified
+                             components and settings.
+        """
+        return GemaConfiguration(
+            config_id=config_id,
+            resource=data.get("resource", {}).get("name"),
+            board=GemaBoard(**data.get("board", {})),
+            processor=GemaProcessor(**data.get("processor", {})),
+            memory=GemaMemory(**data.get("memory", {})),
+            cache=GemaCache(**data.get("cache", {})),
         )
+
+    def delete_config(self, config_id: int) -> bool:
+        """Remove a configuration from the manager.
+
+        Args:
+            config_id (int): The unique identifier of the configuration to delete.
+
+        Returns:
+            bool: True if the configuration was found and deleted, False if no configuration
+                 with the given ID exists.
+        """
+        config = self._get_config_by_id(config_id)
+
+        if config is None:
+            return False
+
+        self.configs = [
+            cfg for cfg in self.configs if cfg.config_id != config_id
+        ]
+        return True
+
+    def set_board(self, config_id: int, type: str, clk: float) -> bool:
+        """Configure the board settings for a specific configuration.
+
+        Args:
+            config_id (int): The unique identifier of the configuration to modify.
+            type (str): The type of board to use (e.g., 'SimpleBoard', 'X86Board').
+            clk (float): The clock frequency in GHz.
+
+        Returns:
+            bool: True if the board settings were successfully updated, False if the
+                 configuration doesn't exist or if the clock frequency is invalid (≤ 0).
+        """
+        config = self._get_config_by_id(config_id)
+        if config is None or clk <= 0:
+            return False
+
+        config.board = GemaBoard(type=type, clk=clk)
+        return True
+
+    def set_processor(
+        self, config_id: int, isa: str, type: str, cpu: str, ncores: int
+    ) -> bool:
+        """Configure the processor settings for a specific configuration.
+
+        Args:
+            config_id (int): The unique identifier of the configuration to modify.
+            isa (str): The instruction set architecture (e.g., 'X86', 'ARM').
+            type (str): The type of processor (e.g., 'SimpleProcessor').
+            cpu (str): The CPU model to use.
+            ncores (int): The number of CPU cores.
+
+        Returns:
+            bool: True if the processor settings were successfully updated, False if the
+                 configuration doesn't exist or if the number of cores is invalid (≤ 0).
+        """
+        config = self._get_config_by_id(config_id)
+        if config is None or ncores <= 0:
+            return False
+
+        config.processor = GemaProcessor(
+            isa=isa, type=type, cpu=cpu, ncores=ncores
+        )
+        return True
+
+    def set_memory(self, config_id: int, type: str, size: int) -> bool:
+        """Configure the memory settings for a specific configuration.
+
+        Args:
+            config_id (int): The unique identifier of the configuration to modify.
+            type (str): The type of memory system to use.
+            size (int): The size of memory in MB.
+
+        Returns:
+            bool: True if the memory settings were successfully updated, False if the
+                 configuration doesn't exist or if the memory size is invalid (≤ 0).
+        """
+        config = self._get_config_by_id(config_id)
+        if config is None or size <= 0:
+            return False
+
+        config.memory = GemaMemory(type=type, size=size)
+        return True
+
+    def set_cache(
+        self,
+        config_id: int,
+        type: str,
+        l1d_size: int,
+        l1i_size: int,
+        l2_size: Optional[int] = None,
+        l1d_assoc: Optional[int] = None,
+        l1i_assoc: Optional[int] = None,
+        l2_assoc: Optional[int] = None,
+    ) -> bool:
+        """Configure the cache hierarchy for a specific configuration.
+
+        This method sets up the cache hierarchy with the specified parameters. It supports
+        configurations with or without L2 cache, and allows customization of cache sizes
+        and associativities.
+
+        Args:
+            config_id (int): The unique identifier of the configuration to modify.
+            type (str): The type of cache hierarchy (e.g., 'NoCache', 'PrivateL1CacheHierarchy').
+            l1d_size (int): The size of the L1 data cache in KB.
+            l1i_size (int): The size of the L1 instruction cache in KB.
+            l2_size (Optional[int]): The size of the L2 cache in KB, if applicable.
+            l1d_assoc (Optional[int]): The associativity of the L1 data cache.
+            l1i_assoc (Optional[int]): The associativity of the L1 instruction cache.
+            l2_assoc (Optional[int]): The associativity of the L2 cache, if applicable.
+
+        Returns:
+            bool: True if the cache settings were successfully updated, False if the
+                 configuration doesn't exist or if the cache sizes are invalid (≤ 0).
+        """
+        config = self._get_config_by_id(config_id)
+        if config is None or l1d_size <= 0 or l1i_size <= 0:
+            return False
+
+        config.cache = GemaCache(
+            type=type,
+            l1d_size=l1d_size,
+            l1i_size=l1i_size,
+            l2_size=l2_size,
+            l1d_assoc=l1d_assoc,
+            l1i_assoc=l1i_assoc,
+            l2_assoc=l2_assoc,
+        )
+        return True
+
+    def set_resource(self, config_id: int, resource: str) -> bool:
+        """Set the simulation resource (workload) for a specific configuration.
+
+        Args:
+            config_id (int): The unique identifier of the configuration to modify.
+            resource (str): The name of the resource/workload to use.
+
+        Returns:
+            bool: True if the resource was successfully set, False if the configuration
+                 doesn't exist.
+        """
+        config = self._get_config_by_id(config_id)
+        if config == None:
+            return False
+
+        config.resource = resource
+        return True
+
+    def generate_gem5_config(self, gema_obj: GemaConfiguration):
+        """Generate a complete gem5 configuration from a GemaConfiguration object.
+
+        This method creates a fully specified gem5 configuration by combining all the
+        components specified in the GemaConfiguration object. It performs validation
+        of all required fields and creates the appropriate gem5 objects.
+
+        Args:
+            gema_obj (GemaConfiguration): A complete GemaConfiguration object containing
+                                        all necessary simulation parameters.
+
+        Returns:
+            The complete gem5 configuration object if successful, None if any validation
+            fails or an error occurs during configuration generation.
+
+        Raises:
+            ValueError: If any required configuration fields are missing or invalid.
+        """
+        try:
+            # Validate that no required fields in gema_obj are None
+            if any(
+                getattr(gema_obj, attr) is None
+                for attr in [
+                    "board",
+                    "processor",
+                    "memory",
+                    "cache",
+                    "resource",
+                ]
+            ):
+                raise ValueError("Configuration fields must not be None")
+
+            # Ensure all sub-fields are populated
+            if (
+                any(
+                    getattr(gema_obj.board, attr) is None
+                    for attr in ["type", "clk"]
+                )
+                or any(
+                    getattr(gema_obj.processor, attr) is None
+                    for attr in ["type", "isa", "cpu", "ncores"]
+                )
+                or any(
+                    getattr(gema_obj.memory, attr) is None
+                    for attr in ["type", "size"]
+                )
+            ):
+                raise ValueError(
+                    "Sub-fields in board, processor, or memory must not be None"
+                )
+
+            # Extract and format configuration fields
+            brd = eval(gema_obj.board.type)
+            clk = f"{gema_obj.board.clk}GHz"
+            proc = eval(gema_obj.processor.type)
+            cpu_type = CPUTypes[gema_obj.processor.cpu.upper()]
+            isa = ISA[gema_obj.processor.isa.upper()]
+            ncores = gema_obj.processor.ncores
+            mem_type = eval(gema_obj.memory.type)
+            msize = f"{gema_obj.memory.size}MB"
+            cache = self.get_cache_configuration(gema_obj.cache)
+
+            # Check that cache configuration is not None
+            if cache is None:
+                raise ValueError(
+                    "Cache configuration is invalid or incomplete"
+                )
+
+            # Create and return the gem5 configuration
+            configuration = brd(
+                clk_freq=clk,
+                processor=proc(cpu_type=cpu_type, isa=isa, num_cores=ncores),
+                memory=mem_type(size=msize),
+                cache_hierarchy=cache,
+            )
+            configuration.set_se_binary_workload(
+                obtain_resource(gema_obj.resource)
+            )
+
+            return configuration
+
+        except ValueError as ve:
+            print(f"Configuration Error: {ve}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+    def get_cache_configuration(self, cache_config: GemaCache):
+        """Create a gem5 cache hierarchy object from a GemaCache configuration.
+
+        This method translates the cache configuration parameters into a gem5 cache
+        hierarchy object, handling different cache types and their parameters.
+
+        Args:
+            cache_config (GemaCache): The cache configuration object containing all
+                                    cache hierarchy parameters.
+
+        Returns:
+            A gem5 cache hierarchy object if successful, None if the configuration is
+            invalid or an error occurs during creation.
+        """
+        try:
+            cache_class = globals()[cache_config.type]
+            init_params = {
+                "l1d_size": f"{cache_config.l1d_size}KiB",
+                "l1i_size": f"{cache_config.l1i_size}KiB",
+                "l2_size": (
+                    f"{cache_config.l2_size}KiB"
+                    if cache_config.l2_size
+                    else None
+                ),
+                "l1d_assoc": cache_config.l1d_assoc or None,
+                "l1i_assoc": cache_config.l1i_assoc or None,
+                "l2_assoc": cache_config.l2_assoc or None,
+            }
+            valid_params = {
+                key: value
+                for key, value in init_params.items()
+                if value is not None
+            }
+            cache_object = cache_class(**valid_params)
+
+            return cache_object
+        except (KeyError, ValueError, TypeError):
+            return None
+
+    def _get_config_by_id(self, config_id: int) -> Optional[GemaConfiguration]:
+        """Retrieve a configuration object by its ID.
+
+        Args:
+            config_id (int): The unique identifier of the configuration to retrieve.
+
+        Returns:
+            Optional[GemaConfiguration]: The configuration object if found, None otherwise.
+        """
+        for cfg in self.configs:
+            if cfg.config_id == config_id:
+                return cfg
+        return None
