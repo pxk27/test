@@ -79,8 +79,8 @@ class ChanneledMemory(AbstractMemorySystem):
         interleaving_size: Union[int, str],
         size: Optional[str] = None,
         addr_mapping: Optional[str] = None,
-        holes: Optional[List[AddrRange]] = None, 
-        # holes be inserted here, or in the set_memory_range method?
+        holes: Optional[List[AddrRange]] = None,
+        # should holes be inserted here, or in the set_memory_range method?
         modulo: Optional[bool] = False,
     ) -> None:
         """
@@ -124,7 +124,7 @@ class ChanneledMemory(AbstractMemorySystem):
             self._size = toMemorySize(size)
         else:
             self._size = self._get_dram_size(num_channels, self._dram_class)
-            
+
         self._holes = holes
         self._modulo = modulo
 
@@ -149,7 +149,6 @@ class ChanneledMemory(AbstractMemorySystem):
 
     def _interleave_addresses(self):
         if self._modulo:
-            print("Using modulo interleaving")
             for i, ctrl in enumerate(self.mem_ctrl):
                 ctrl.dram.range = AddrRange(
                     start=self._mem_range.start,
@@ -225,6 +224,3 @@ class ChanneledMemory(AbstractMemorySystem):
     @overrides(AbstractMemorySystem)
     def get_uninterleaved_range(self) -> List[AddrRange]:
         return [self._mem_range]
-
-    # def get_holes(self) -> List[AddrRange]:
-    #     return self._holes

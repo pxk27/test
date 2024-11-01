@@ -1051,6 +1051,8 @@ class AddrRange(ParamValue):
         # Go from the Python class to the wrapped C++ class
         from _m5.range import AddrRange
 
+        # from _m5.range import ModuloAddrRange
+
         if not self.modulo_by:
             return AddrRange(
                 int(self.start),
@@ -1080,17 +1082,8 @@ class AddrRange(ParamValue):
     def exclude(self, ranges):
         pybind_exclude = list([r.getValue() for r in ranges])
         pybind_include = self.getValue().exclude(pybind_exclude)
+        # may need to add modulo and hole support here.
 
-        # when is this used?
-        # add modulo and hole support here. 
-        # temp_list = list()
-        
-        # for r in pybind_include:
-        #     if r.modulo_by:
-        #         temp_list.append(AddrRange(r.start(), r.end(), r.modulo_by, 
-        #                                    r.lowest_modulo_bit, r.invlMatch(), 
-        #                                    r.holes()))
-        
         return list([AddrRange(r.start(), r.end()) for r in pybind_include])
 
     def is_subset(self, addr_range):
