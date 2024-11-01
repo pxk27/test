@@ -7,6 +7,9 @@
   * It returns if the stride does not match, as opposed to issuing prefetching using the new stride --- the previous, incorrect behavior.
   * Returns if the new stride is 0, indicating multiple reads from the same cache line.
 
+* The [behavior of the statistics `simInsts` and `simOps` has been changed](https://github.com/gem5/gem5/pull/1615). They now reset to zero when m5.stats.reset() is called. Previously, they incorrectly did not reset and would increase monotonically throughout the simulation.
+  * The statistics `hostInstRate` and `hostOpRate` are also affected by this change, as they are calculated using simInsts and simOps respectively.
+
 # Version 24.0
 
 gem5 Version 24.0 is the first major release of 2024.
