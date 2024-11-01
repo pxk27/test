@@ -999,7 +999,7 @@ class AddrRange(ParamValue):
     def size(self):
         # Divide the size by the size of the interleaving slice
         if self.modulo_by == 0:
-            return int(self.end) - int(self.start) >> self.intlvBits
+            return (int(self.end) - int(self.start)) >> self.intlvBits
 
         return int((int(self.end) - int(self.start)) / int(self.modulo_by))
 
