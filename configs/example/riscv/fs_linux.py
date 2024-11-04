@@ -176,6 +176,8 @@ parser.add_argument(
 )
 # ---------------------------- Parse Options --------------------------- #
 args = parser.parse_args()
+if not args.kernel:
+    parser.error("--kernel argument is required")
 
 # CPU and Memory
 (CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(args)
