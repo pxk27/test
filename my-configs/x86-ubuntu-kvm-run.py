@@ -91,7 +91,7 @@ def exit_event_handler():
     # m5 readfile. This is the last exit event before the simulation exits.
     while True:
         yield False
-        simulator.get_last_exit_event_special_code()
+        print("special code: ", simulator.get_last_exit_event_special_code())
 
 
 simulator = Simulator(
