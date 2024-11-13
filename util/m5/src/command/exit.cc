@@ -50,7 +50,8 @@ do_exit(const DispatchTable &dt, Args &args)
 }
 
 Command exit_cmd = {
-    "exit", 0, 1, do_exit, "[delay]\n"
-        "        Exit after delay, or immediately" };
+    "exit", 0, 2, do_exit, "[delay] [special_code]\n"
+        "        Exit after delay with a custom code"
+};
 
 } // anonymous namespace

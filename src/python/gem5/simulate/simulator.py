@@ -595,6 +595,12 @@ class Simulator:
         """
         return self._last_exit_event.getCode()
 
+    def get_last_exit_event_special_code(self) -> int:
+        """
+        Returns the last exit event special code
+        """
+        return self._last_exit_event.getSpecialCode()
+
     def get_current_tick(self) -> int:
         """
         Returns the current tick.

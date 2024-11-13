@@ -138,6 +138,7 @@ pybind_init_event(py::module_ &m_native)
                m, "GlobalSimLoopExitEvent")
         .def("getCause", &GlobalSimLoopExitEvent::getCause)
         .def("getCode", &GlobalSimLoopExitEvent::getCode)
+        .def("getSpecialCode", &GlobalSimLoopExitEvent::getSpecialCode)
         ;
 
     // Event base class. These should never be returned directly to
