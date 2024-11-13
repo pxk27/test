@@ -54,9 +54,11 @@ namespace gem5
 
 GlobalSimLoopExitEvent::GlobalSimLoopExitEvent(Tick when,
                                                const std::string &_cause,
-                                               int c, Tick r)
+                                               int c,
+                                               uint64_t special_code,
+                                               Tick r)
     : GlobalEvent(when, Sim_Exit_Pri, IsExitEvent),
-      cause(_cause), code(c), repeat(r)
+      cause(_cause), code(c), repeat(r), special_code(special_code)
 {
 }
 
@@ -85,14 +87,15 @@ GlobalSimLoopExitEvent::process()
 }
 
 void
-exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat,
-            bool serialize)
+exitSimLoop(const std::string &message, int exit_code, uint64_t special_code,
+            Tick when, Tick repeat, bool serialize)
 {
     warn_if(serialize && (when != curTick() || repeat),
             "exitSimLoop called with a delay and auto serialization. This is "
             "currently unsupported.");
 
-    new GlobalSimLoopExitEvent(when + simQuantum, message, exit_code, repeat);
+    new GlobalSimLoopExitEvent(when + simQuantum, message, exit_code,
+        special_code, repeat);
 }
 
 void

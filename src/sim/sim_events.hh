@@ -59,15 +59,16 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     std::string cause;
     int code;
     Tick repeat;
+    uint64_t special_code;
 
   public:
     GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
-                           Tick repeat = 0);
+                           uint64_t special_code = 0, Tick repeat = 0);
     GlobalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
     const std::string getCause() const { return cause; }
     int getCode() const { return code; }
-
+    uint64_t getSpecialCode() const { return special_code; }
     virtual void process();// process event
     virtual void clean(){};//cleaning event
     ~GlobalSimLoopExitEvent (){

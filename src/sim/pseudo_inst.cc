@@ -175,12 +175,13 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
 }
 
 void
-m5exit(ThreadContext *tc, Tick delay)
+m5exit(ThreadContext *tc, Tick delay, uint64_t special_code)
 {
     DPRINTF(PseudoInst, "pseudo_inst::m5exit(%i)\n", delay);
     if (DistIface::readyToExit(delay)) {
         Tick when = curTick() + delay * sim_clock::as_int::ns;
-        exitSimLoop("m5_exit instruction encountered", 0, when, 0, true);
+        exitSimLoop("m5_exit instruction encountered", 0,
+            special_code, when, 0, true);
     }
 }
 

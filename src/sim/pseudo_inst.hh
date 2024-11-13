@@ -98,7 +98,7 @@ void addsymbol(ThreadContext *tc, GuestAddr addr, GuestAddr symbolAddr);
 uint64_t initParam(ThreadContext *xc, uint64_t key_str1, uint64_t key_str2);
 uint64_t rpns(ThreadContext *tc);
 void wakeCPU(ThreadContext *tc, uint64_t cpuid);
-void m5exit(ThreadContext *tc, Tick delay);
+void m5exit(ThreadContext *tc, Tick delay, uint64_t special_code);
 void m5fail(ThreadContext *tc, Tick delay, uint64_t code);
 uint64_t m5sum(ThreadContext *tc, uint64_t a, uint64_t b, uint64_t c,
                                   uint64_t d, uint64_t e, uint64_t f);
