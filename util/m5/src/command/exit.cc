@@ -37,10 +37,14 @@ bool
 do_exit(const DispatchTable &dt, Args &args)
 {
     uint64_t ns_delay;
+    uint64_t special_code;
     if (!args.pop(ns_delay, 0))
         return false;
 
-    (*dt.m5_exit)(ns_delay);
+    if (!args.pop(special_code, 0))
+        return false;
+
+    (*dt.m5_exit)(ns_delay, special_code);
 
     return true;
 }

@@ -45,7 +45,7 @@ uint64_t m5_quiesce_time(void);
 uint64_t m5_rpns();
 void m5_wake_cpu(uint64_t cpuid);
 
-void m5_exit(uint64_t ns_delay);
+void m5_exit(uint64_t ns_delay, uint64_t special_code);
 void m5_fail(uint64_t ns_delay, uint64_t code);
 // m5_sum is for sanity checking the gem5 op interface.
 unsigned m5_sum(unsigned a, unsigned b, unsigned c,
