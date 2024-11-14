@@ -464,7 +464,7 @@ ISA::hpmCounterCheck(int misc_reg, ExtMachInst machInst) const
 
     // then, if h-extension is on and virtualization
     // is enabled, respect hcounteren for VS and VU
-    if (misa.rvh && isV() && prv < PRV_HS &&
+    if (misa.rvh && virtualizationEnabled() && prv < PRV_HS &&
         bits(hcounteren, hpmcounter) == 0)
     {
         return std::make_shared<VirtualInstFault>(
@@ -609,7 +609,7 @@ ISA::readMiscReg(RegIndex idx)
                     status.mpp = (misa.rvu) ? PRV_U : PRV_M;
             }
 
-            if ((isV() && idx == MISCREG_VSSTATUS) ||
+            if ((virtualizationEnabled() && idx == MISCREG_VSSTATUS) ||
                          (idx == MISCREG_STATUS)) {
                 RegVal bits_of_interest = STATUS_MPP_MASK |
                                           STATUS_MPRV_MASK |
@@ -912,7 +912,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 auto wmask_map = CSRWriteMasks[RV64][getPrivilegeModeSet()];
                 auto sstatus_wmask = wmask_map.find(CSR_VSSTATUS)->second;
                 val = (cur & ~sstatus_wmask) | val;
-                if (isV()) {
+                if (virtualizationEnabled()) {
                     RegVal bits_of_interest = 0
                         | STATUS_MPP_MASK
                         | STATUS_MPRV_MASK
@@ -1080,7 +1080,7 @@ ISA::resetThread()
 }
 
 bool
-ISA::isV() const
+ISA::virtualizationEnabled() const
 {
     // Virtualized when V-bit is 1
     return readMiscRegNoEffect(MISCREG_VIRT) == 1;
@@ -1124,7 +1124,7 @@ ISA::tvmChecks(uint64_t csr, PrivilegeMode pm, ExtMachInst machInst)
         }
     }
     else if (csr == CSR_VSATP) {
-        if (isV()) {
+        if (virtualizationEnabled()) {
         HSTATUS hstatus = readMiscReg(MISCREG_HSTATUS);
         if (hstatus.vtvm == 1)
             return std::make_shared<VirtualInstFault>(
@@ -1334,24 +1334,28 @@ ISA::getFaultHandlerAddr(RegIndex idx, uint64_t cause, bool intr) const
 }
 
 // V-bit utilities (H-extension)
-bool isV(ExecContext *xc) { return xc->readMiscReg(MISCREG_VIRT); }
-bool isV(ThreadContext *tc) { return tc->readMiscReg(MISCREG_VIRT); }
+bool virtualizationEnabled(ExecContext *xc) {
+    return xc->readMiscReg(MISCREG_VIRT);
+}
+bool virtualizationEnabled(ThreadContext *tc) {
+    return tc->readMiscReg(MISCREG_VIRT);
+}
 
 void setV(ExecContext *xc) {
-    assert(!isV(xc));
+    assert(!virtualizationEnabled(xc));
     xc->setMiscReg(MISCREG_VIRT, 1);
 }
 void setV(ThreadContext *tc) {
-    assert(!isV(tc));
+    assert(!virtualizationEnabled(tc));
     tc->setMiscReg(MISCREG_VIRT, 1);
 }
 
 void resetV(ExecContext *xc) {
-    assert(isV(xc));
+    assert(virtualizationEnabled(xc));
     xc->setMiscReg(MISCREG_VIRT, 0);
 }
 void resetV(ThreadContext *tc) {
-    assert(isV(tc));
+    assert(virtualizationEnabled(tc));
     tc->setMiscReg(MISCREG_VIRT, 0);
 }
 
@@ -1361,18 +1365,19 @@ Fault updateFPUStatus(ExecContext *xc, ExtMachInst machInst, bool set_dirty) {
 
     MISA misa = xc->readMiscReg(MISCREG_ISA);
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    STATUS vsstatus = misa.rvh && isV(xc) ?
+    STATUS vsstatus = misa.rvh && virtualizationEnabled(xc) ?
         xc->readMiscReg(MISCREG_VSSTATUS) : 0;
 
     if (status.fs == FPUStatus::OFF ||
-        (misa.rvh && isV(xc) && vsstatus.fs == FPUStatus::OFF))
+        (misa.rvh && virtualizationEnabled(xc) &&
+         vsstatus.fs == FPUStatus::OFF))
         return std::make_shared<IllegalInstFault>("FPU is off", machInst);
 
     if (set_dirty) {
         status.fs = FPUStatus::DIRTY;
         xc->setMiscReg(MISCREG_STATUS, status);
 
-        if (misa.rvh && isV(xc)) {
+        if (misa.rvh && virtualizationEnabled(xc)) {
             vsstatus.fs = FPUStatus::DIRTY;
             xc->setMiscReg(MISCREG_VSSTATUS, vsstatus);
         }
@@ -1387,11 +1392,12 @@ Fault updateVPUStatus(
 
     MISA misa = xc->readMiscReg(MISCREG_ISA);
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    STATUS vsstatus = misa.rvh && isV(xc) ?
+    STATUS vsstatus = misa.rvh && virtualizationEnabled(xc) ?
         xc->readMiscReg(MISCREG_VSSTATUS) : 0;
 
     if (!misa.rvv || status.vs == VPUStatus::OFF ||
-        (misa.rvh && isV(xc) && vsstatus.vs == VPUStatus::OFF))
+        (misa.rvh && virtualizationEnabled(xc) &&
+         vsstatus.vs == VPUStatus::OFF))
         return std::make_shared<IllegalInstFault>(
             "RVV is disabled or VPU is off", machInst);
 
@@ -1404,7 +1410,7 @@ Fault updateVPUStatus(
         status.vs = VPUStatus::DIRTY;
         xc->setMiscReg(MISCREG_STATUS, status);
 
-        if (misa.rvh && isV(xc)) {
+        if (misa.rvh && virtualizationEnabled(xc)) {
             vsstatus.vs = VPUStatus::DIRTY;
             xc->setMiscReg(MISCREG_VSSTATUS, vsstatus);
         }
