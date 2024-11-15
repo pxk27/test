@@ -125,5 +125,4 @@ def DIMM_DDR5_4400_x86_Holes(
         64,
         size=size,
         holes=[AddrRange(start="3GiB", end="4GiB")],
-        modulo=True,
     )

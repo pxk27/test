@@ -42,8 +42,7 @@ scons build/X86/gem5.opt
 
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
-from gem5.components.memory.single_channel import SingleChannelDDR3_1600
-# from gem5.components.memory.single_channel import DIMM_DDR5_4400_x86_Holes
+from gem5.components.memory.single_channel import DIMM_DDR5_4400_x86_Holes
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
@@ -78,8 +77,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 )
 
 # Setup the system memory.
-memory = SingleChannelDDR3_1600(size="3GB")
-# memory = DIMM_DDR5_4400_x86_Holes(size="9GB")
+memory = DIMM_DDR5_4400_x86_Holes(size="9GB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
@@ -112,16 +110,14 @@ board = X86Board(
 # then, again, call `m5 exit` to terminate the simulation. After simulation
 # has ended you may inspect `m5out/system.pc.com_1.device` to see the echo
 # output.
-# command = (
-#     "m5 exit;"
-#     + "echo 'This is running on Timing CPU cores.';"
-#     + "sleep 1;"
-#     + "m5 exit;"
-# )
-
 command = (
-    "lscpu;"
+    "echo 'This is running on KVM CPU cores.';"
+    + "m5 exit;"
+    + "echo 'This is running on Timing CPU cores.';"
+    + "sleep 1;"
+    + "m5 exit;"
 )
+
 
 workload = obtain_resource("x86-ubuntu-18.04-boot", resource_version="2.0.0")
 workload.set_parameter("readfile_contents", command)

@@ -137,9 +137,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             APIC_range_size = 1 << 12
 
             self.bridge.ranges = [
-                AddrRange(
-                    0xC0000000, 0xFFFF0000
-                ),  # does this need to be the size of queue?
+                AddrRange(0xC0000000, 0xFFFF0000),
                 AddrRange(
                     IO_address_space_base, interrupts_address_space_base - 1
                 ),
@@ -242,15 +240,9 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             # Mark the first megabyte of memory as reserved
             X86E820Entry(addr=0, size="639kB", range_type=1),
             X86E820Entry(addr=0x9FC00, size="385kB", range_type=2),
-            # Mark the rest of physical memory as available
-            # is the below entry messing us up?
-            # X86E820Entry(
-            #     addr=0x100000,
-            #     size=f"{self.mem_ranges[0].size() - 0x100000:d}B",
-            #     range_type=1,
-            # ),
         ]
 
+        # Mark the rest of physical memory as available
         if self.get_memory().get_size() > toMemorySize("3GiB"):
             entries.append(
                 X86E820Entry(
@@ -263,7 +255,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
             entries.append(
                 X86E820Entry(
                     addr=0x100000000,
-                    size=f"{self.mem_ranges[0].size() - toMemorySize('4GiB'):d}B",
+                    size=f"{self.mem_ranges[0].size() - 0x100000000:d}B",
                     range_type=1,
                 )
             )
@@ -313,13 +305,9 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
 
         if memory.get_size() > toMemorySize("3GB"):
             # add a warning here about using holes
-            # test if this is set if its unneeded in the memory controller
             data_range = AddrRange(
                 start=0,
                 end=memory.get_size(),
-                modulo_by=1,
-                lowest_modulo_bit=7,
-                intlvMatch=0,
                 holes=[AddrRange(start="3GiB", end="4GiB")],
             )
         else:
