@@ -77,7 +77,7 @@ class X86DemoBoard(X86Board):
             "real-world system. Use with caution."
         )
 
-        memory = SingleChannelDDR3_1600(size="3GB")
+        memory = SingleChannelDDR3_1600(size="2GB")
         processor = SimpleProcessor(
             cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4
         )
