@@ -79,7 +79,7 @@ class ChanneledMemory(AbstractMemorySystem):
         interleaving_size: Union[int, str],
         size: Optional[str] = None,
         addr_mapping: Optional[str] = None,
-        holes: Optional[List[AddrRange]] = None,
+        holes: Optional[List[AddrRange]] = [],
         # should holes be inserted here, or in the set_memory_range method?
     ) -> None:
         """
@@ -169,7 +169,7 @@ class ChanneledMemory(AbstractMemorySystem):
                 xorHighBit=0,
                 intlvBits=intlv_bits,
                 intlvMatch=i,
-                holes=self._holes,
+                holes=self._mem_range.get_addr_holes(),
             )
 
     @overrides(AbstractMemorySystem)
@@ -206,6 +206,7 @@ class ChanneledMemory(AbstractMemorySystem):
                 f"The range size: {ranges[0].size()}\n"
                 f"This memory's size: {self._size}"
             )
+
         self._mem_range = ranges[0]
         self._interleave_addresses()
 

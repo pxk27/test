@@ -917,9 +917,10 @@ class AddrRange(ParamValue):
                 raise TypeError("Either end or size must be specified")
 
             if "holes" in kwargs:
-                for item in kwargs.pop("holes"):
-                    temp_range = AddrRange(item.start, item.end)
-                    self.holes.append(temp_range.getValue())
+                self.holes = kwargs.pop("holes")
+                # for item in kwargs.pop("holes"):
+                #     temp_range = AddrRange(item.start, item.end)
+                #     self.holes.append(temp_range.getValue())
 
             # Now on to the optional bit
             if "intlvMatch" in kwargs:
@@ -1033,12 +1034,16 @@ class AddrRange(ParamValue):
         # Go from the Python class to the wrapped C++ class
         from _m5.range import AddrRange
 
+        cpp_holes = []
+        for hole in self.holes:
+            cpp_holes.append(hole.getValue())
+
         return AddrRange(
             int(self.start),
             int(self.end),
             self.masks,
             int(self.intlvMatch),
-            self.holes,
+            cpp_holes,
         )
 
     def exclude(self, ranges):
@@ -1049,6 +1054,14 @@ class AddrRange(ParamValue):
 
     def is_subset(self, addr_range):
         return self.getValue().isSubset(addr_range.getValue())
+
+    def add_hole(self, hole):
+        self.holes.append(hole)
+
+        # self.holes.append(hole.getValue())
+
+    def get_addr_holes(self):
+        return self.holes
 
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since

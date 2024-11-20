@@ -303,15 +303,17 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload):
     def _setup_memory_ranges(self):
         memory = self.get_memory()
 
-        if memory.get_size() > toMemorySize("3GB"):
-            # add a warning here about using holes
-            data_range = AddrRange(
-                start=0,
-                end=memory.get_size(),
-                holes=[AddrRange(start="3GiB", end="4GiB")],
+        if memory.get_size() > toMemorySize(
+            "3GB"
+        ) and memory.get_size() < toMemorySize("4GB"):
+            raise Exception(
+                "X86Board memory must have more than 4GB or less than 3GB"
+                " because of the I/O hole. "
             )
-        else:
-            data_range = AddrRange(memory.get_size())
+
+        # add a warning here about using holes
+        data_range = AddrRange(memory.get_size())
+        data_range.add_hole(AddrRange(start="3GiB", end="4GiB"))
 
         memory.set_memory_range([data_range])
 

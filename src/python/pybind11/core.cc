@@ -138,7 +138,7 @@ init_range(py::module_ &m_native)
 
     py::class_<AddrRange> (m, "AddrRange")
         .def(py::init<>())
-        .def(py::init<Addr &, Addr &, const std::vector<AddrRange> &>())
+        .def(py::init<Addr &, Addr &>())
         .def(py::init<Addr, Addr, const std::vector<Addr> &, uint8_t,
                     const std::vector<AddrRange> &>())
         .def(py::init<Addr, Addr, const std::vector<Addr> &, uint8_t >())
@@ -163,6 +163,7 @@ init_range(py::module_ &m_native)
         .def("isSubset", &AddrRange::isSubset)
         .def("exclude", static_cast<AddrRangeList (AddrRange::*)(
                     const AddrRangeList &) const>(&AddrRange::exclude))
+        .def("addHole", &AddrRange::addHole)
             ;
 
     m.def("RangeEx", &RangeEx);

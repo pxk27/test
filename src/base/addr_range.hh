@@ -287,8 +287,8 @@ class AddrRange
     }
 
 
-    AddrRange(Addr _start, Addr _end, std::vector<AddrRange> holes = {})
-        : _start(_start), _end(_end), intlvMatch(0), holes(holes) {}
+    AddrRange(Addr _start, Addr _end)
+        : _start(_start), _end(_end), intlvMatch(0), holes({}) {}
 
     /**
      * Create an address range by merging a collection of interleaved
@@ -473,8 +473,6 @@ class AddrRange
             // if neither range is interleaved, we are done
             if (holes.size() > 0 || r.holes.size() > 0) {
                 // if either have holes, check if the other range is in a hole
-                // potentially need to expand, what if the other address range
-                // is in multiple holes?
                 if (_start < r._start) {
                     for (auto hole : holes){
 
@@ -508,8 +506,6 @@ class AddrRange
             if (holes.size() > 0 || r.holes.size() > 0)
             {
                 // if either have holes, check if the other range is in a hole
-                // potentially need to expand, what if the other address range
-                // is in multiple holes?
                 if (_start < r._start) {
                     for (auto hole : holes) {
 
@@ -552,12 +548,12 @@ class AddrRange
         // whether it would fit in a continuous segment of the input
         // addr range.
         for (auto hole : r.holes) {
-                    if ((hole.start() >= _start && hole.start() < _end)
-                        || (hole.end() > _start && hole.end() < _end)
-                        || (hole.start() < _start && hole.end() > _end)){
+            if ((hole.start() >= _start && hole.start() < _end)
+                || (hole.end() > _start && hole.end() < _end)
+                || (hole.start() < _start && hole.end() > _end)){
 
-                            return false;
-                    }
+                    return false;
+            }
         }
 
         if (r.interleaved()) {
@@ -820,6 +816,12 @@ class AddrRange
     exclude(const AddrRange &excluded_range) const
     {
         return exclude(AddrRangeList{excluded_range});
+    }
+
+    // add a hole to the range
+    void
+    addHole(AddrRange hole) {
+        holes.push_back(hole);
     }
 
     /**
