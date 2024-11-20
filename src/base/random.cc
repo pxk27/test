@@ -42,6 +42,8 @@
 
 #include <sstream>
 
+#include <algorithm>
+
 namespace gem5
 {
 
