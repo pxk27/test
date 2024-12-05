@@ -109,6 +109,7 @@ TAGEBase::init()
 
     for (auto& history : threadHistory) {
         history.pathHist = 0;
+        history.nonSpecPathHist = 0;
         history.globalHistory = new uint8_t[histBufferSize];
         history.gHist = history.globalHistory;
         memset(history.gHist, 0, histBufferSize);
@@ -591,9 +592,7 @@ TAGEBase::updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
     ThreadHistory& tHist = threadHistory[tid];
 
     // Update path history
-    bool pathbit = ((branch_pc >> instShiftAmt) & 1);
-    tHist.pathHist = (tHist.pathHist << 1) + pathbit;
-    tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
+    tHist.pathHist = calcNewPathHist(tid, branch_pc, tHist.pathHist);
 
     // For normal direction history update the history by
     // whether the branch was taken or not.
@@ -610,6 +609,11 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
                           const StaticInstPtr & inst, BranchInfo* bi)
 {
     if (speculative != speculativeHistUpdate) {
+        if (!speculative) {
+            // Save the speculative path history as non-speculative
+            threadHistory[tid].nonSpecPathHist
+                            = calcNewPathHist(tid, branch_pc, bi->pathHist);
+        }
         return;
     }
 
@@ -682,15 +686,24 @@ TAGEBase::restoreHistState(ThreadID tid, BranchInfo* bi)
     for (int n = 0; n < bi->nGhist; n++) {
 
         // First revert the folded history
-    for (int i = 1; i <= nHistoryTables; i++) {
+        for (int i = 1; i <= nHistoryTables; i++) {
             tHist.computeIndices[i].restore(tHist.gHist);
             tHist.computeTags[0][i].restore(tHist.gHist);
             tHist.computeTags[1][i].restore(tHist.gHist);
-    }
+        }
         tHist.ptGhist++;
         tHist.gHist++;
     }
     bi->nGhist = 0;
+}
+
+int
+TAGEBase::calcNewPathHist(ThreadID tid, Addr pc, int phist) const
+{
+    int pathbit = ((pc >> instShiftAmt) & 1);
+    phist = (phist << 1) + pathbit;
+    phist = (phist & ((1ULL << pathHistBits) - 1));
+    return phist;
 }
 
 void
@@ -826,9 +839,10 @@ TAGEBase::getTageCtrBits() const
 }
 
 int
-TAGEBase::getPathHist(ThreadID tid) const
+TAGEBase::getPathHist(ThreadID tid, bool speculative) const
 {
-    return threadHistory[tid].pathHist;
+    return speculative ? threadHistory[tid].pathHist
+                       : threadHistory[tid].nonSpecPathHist;
 }
 
 bool
