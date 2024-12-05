@@ -2,10 +2,44 @@
 
 ## User facing changes
 
+* The [behavior of the statistics `simInsts` and `simOps` has been changed](https://github.com/gem5/gem5/pull/1615).
+  * They now reset to zero when m5.stats.reset() is called.
+  * Previously, they incorrectly did not reset and would increase monotonically throughout the simulation.
+  * The statistics `hostInstRate` and `hostOpRate` are also affected by this change, as they are calculated using simInsts and simOps respectively.
+
+* Instances of kB, MB, and GB have been changed to KiB, MiB, and GiB for memory and cache sizes https://github.com/gem5/gem5/pull/1479
+  * A warning has also been added for usages of kB, MB, and GB.
+  * Please use KiB, MiB, and GiB in the future.
+
+* Random number generator is no longer shared across components. This may modify simulation results. https://github.com/gem5/gem5/pull/1534
+
+### gem5 Standard Library
+  * SE mode has been added to X86Board, X86DemoBoard, and RiscvBoard https://github.com/gem5/gem5/pull/1702
+  * ArmDemoBoard and RiscvDemoBoard have been added to the standard library https://github.com/gem5/gem5/pull/1478 https://github.com/gem5/gem5/pull/1490
+  * The values in the X86DemoBoard have been modified to make it more similar to the new DemoBoards https://github.com/gem5/gem5/pull/1618
+
+### Prefetchers
 * The [behavior of the`StridePrefetcher` has been altered](https://github.com/gem5/gem5/pull/1449) as follows:
   * The addresses used to compute the stride has been changed from word aligned addresses to cache line aligned addresses.
   * It returns if the stride does not match, as opposed to issuing prefetching using the new stride --- the previous, incorrect behavior.
   * Returns if the new stride is 0, indicating multiple reads from the same cache line.
+* Fix implementation of Best Offset Prefetcher https://github.com/gem5/gem5/pull/1403
+* Add SMS Prefetcher
+<!-- * Added files for [generating Sphinx documentation](https://github.com/gem5/gem5/pull/335) for the gem5 standard library. -->
+
+### Configuration scripts
+* Update the full system gem5 Standard Library example scripts to use Ubuntu 24.04 disk images https://github.com/gem5/gem5/pull/1491
+* Add RV32 option to configs/example/riscv/fs_linux.py https://github.com/gem5/gem5/pull/1312
+* Other updates to configs/example/riscv/fs_linux.py https://github.com/gem5/gem5/pull/1753
+
+
+### Multisim
+* simerr.txt and simout.txt now output into the correct sub-directory when -re is passed https://github.com/gem5/gem5/pull/1551
+
+
+### Compiler and OS support
+As of this release, gem5 supports Clang versions 14 through 18 and GCC versions 10 through 14.
+Other versions may work, but they are not regularly tested.
 
 ### Multiple Ruby Protocols in a Single Build
 
@@ -20,10 +54,7 @@ every protocol.
   * **USER FACING CHANGE**: The the "build_opts/ALL" build spec has been updated to include all Ruby protocols . As such, gem5 compilations of the "ALL" compilation target will include all gem5 Ruby protocols (previously just MESI_Two_Level).
   * A "build_opts/NULL_ALL_RUBY" build spec has been added to include all Ruby protocols for a "NULL ISA" build . This is useful for testing Ruby protocols without the overhead of a full ISA and is used in gem5's traffic generator tests.
   * A "build_opts/ARM_X86" build spec has been added due to a unique restriction in the "tests/gem5/fs/linux/arm" tests which requires a compilation of gem5 with both ARM and X86 and solely the MESI_Two_Level protocol.
-* The [behavior of the statistics `simInsts` and `simOps` has been changed](https://github.com/gem5/gem5/pull/1615).
-  * They now reset to zero when m5.stats.reset() is called.
-  * Previously, they incorrectly did not reset and would increase monotonically throughout the simulation.
-  * The statistics `hostInstRate` and `hostOpRate` are also affected by this change, as they are calculated using simInsts and simOps respectively.
+
 
 ### Multiple RubySystem objects in a simulation
 
@@ -115,6 +146,30 @@ ARM::CHI::Phase            CHIResponseMsg
 ```
 
 In this way it will be possible to connect external RNF models to the ruby interconnect via the CHI-TLM library
+
+## Other Miscellaneous Changes
+
+### Other Ruby Related Changes
+  * RubyHitMiss debug flag https://github.com/gem5/gem5/pull/1260
+  * Prevent LL/SC livelock in MESI protocols https://github.com/gem5/gem5/pull/1399
+
+<!-- ### Testing Related Changes
+  * Move GPU tests to stdlib https://github.com/gem5/gem5/pull/1270  -->
+
+### RISCV
+  * Use sign extend for all address generation https://github.com/gem5/gem5/pull/1316
+  * Fix implicit int-to-float conversion in .isa files https://github.com/gem5/gem5/pull/1319
+  * Implement Zcmp instructions https://github.com/gem5/gem5/pull/1432
+  * Add support for riscv hardware probing syscall https://github.com/gem5/gem5/pull/1525
+  * Add support for Zicbop extension https://github.com/gem5/gem5/pull/1710
+  * Fix vector instruction assertion caused by speculative execution https://github.com/gem5/gem5/pull/1711
+
+### Other
+  * Looppoint analysis object https://github.com/gem5/gem5/pull/1419
+  * Add global and local instruction trackers for raising instruction executed exit events with multi-core simulation https://github.com/gem5/gem5/pull/1433
+
+### Development
+  * Removal of Gerrit Change-ID requirement https://github.com/gem5/gem5/pull/1486
 
 # Version 24.0.0.1
 
