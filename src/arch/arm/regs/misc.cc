@@ -6686,7 +6686,7 @@ ISA::initializeMiscRegMetadata()
         .fault(EL3, faultZcrEL3)
         .hyp().mon();
     InitReg(MISCREG_ZCR_EL12)
-        .fault(EL2, defaultFaultE2H_EL2)
+        .fault(EL2, faultVheEL2<faultZcrEL2>)
         .fault(EL3, defaultFaultE2H_EL3)
         .mapsTo(MISCREG_ZCR_EL1);
     InitReg(MISCREG_ZCR_EL1)
