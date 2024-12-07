@@ -172,7 +172,6 @@ See #1636.
 
 * Vega10 has been deprecated #1619
 * Replacement policy has been improved #1564
-* Improvements to the TLB #1431
 * Swizzle multi-dword scratch requests now supported #1445
 * Many improvements to Vega implementation including SDWA, SDWAB, and DPP instructions #1378
 
