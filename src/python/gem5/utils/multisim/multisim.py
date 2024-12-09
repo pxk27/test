@@ -210,7 +210,13 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     # module path (the config script specifying all simulations using MultiSim)
     # but a different ID. The ID is used to select the correct simulator to
     # run.
-    pool.starmap(_run, zip([module_path for _ in range(len(ids))], tuple(ids)))
+    try:
+        pool.starmap(
+            _run, zip([module_path for _ in range(len(ids))], tuple(ids))
+        )
+    finally:
+        pool.close()
+        pool.join()
 
 
 def set_num_processes(num_processes: int) -> None:
