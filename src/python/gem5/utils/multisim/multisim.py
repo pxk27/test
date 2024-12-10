@@ -200,23 +200,23 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
         "(after determining number of jobs)."
     )
 
-    # Setup the multiprocessing pool. If the number of processes is not
-    # specified (i.e. `None`) the default is the number or available threads.
-    from ..multiprocessing.context import gem5Context
+    active_processes = []
+    remaining_ids = list(ids).copy()
+    from gem5.utils.multiprocessing import Process
 
-    pool = gem5Context().Pool(processes=max_num_processes, maxtasksperchild=1)
-
-    # Use the starmap function to create N child processes each with same
-    # module path (the config script specifying all simulations using MultiSim)
-    # but a different ID. The ID is used to select the correct simulator to
-    # run.
-    try:
-        pool.starmap(
-            _run, zip([module_path for _ in range(len(ids))], tuple(ids))
-        )
-    finally:
-        pool.close()
-        pool.join()
+    while remaining_ids or active_processes:
+        while remaining_ids and len(active_processes) < max_num_processes:
+            id_to_run = remaining_ids.pop()
+            print(f"Running {id_to_run}")
+            process = Process(
+                target=_run, args=(module_path, id_to_run), name=id_to_run
+            )
+            process.start()
+            active_processes.append(process)
+        for process in active_processes:
+            if not process.is_alive():
+                active_processes.remove(process)
+    print("All simulations complete.")
 
 
 def set_num_processes(num_processes: int) -> None:
@@ -254,7 +254,6 @@ def add_simulator(simulator: "Simulator") -> None:
     simulation. This is particularly important when referencing the correct
     m5out subdirectory.
     """
-
     global _multi_sim
     if not simulator.get_id():
         # The default simulator id is the length of the current set of
