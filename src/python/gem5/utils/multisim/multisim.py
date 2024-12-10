@@ -51,13 +51,17 @@ This script is then passed to the child processes to load.
 
 import importlib
 import multiprocessing
+import signal
+import time
 from pathlib import Path
+from threading import Lock
 from typing import (
     Optional,
     Set,
 )
 
 from m5.core import override_re_outdir
+from m5.util import inform
 
 # A global variable which __main__.py flips to `True` when multisim is run as
 # an executable module.
@@ -172,8 +176,10 @@ def _run(module_path: Path, id: str) -> None:
     sim_list[0].override_outdir(subdir)
     # This doesn't do anything if none of the redirect options are passed
     override_re_outdir(subdir)
-
-    sim_list[0].run()
+    try:
+        sim_list[0].run()
+    except Exception as e:
+        inform(f"Error running simulator {id}: {e}")
 
 
 def run(module_path: Path, processes: Optional[int] = None) -> None:
@@ -202,19 +208,51 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
 
     active_processes = []
     remaining_ids = list(ids).copy()
+    process_lock = Lock()
     from gem5.utils.multiprocessing import Process
 
-    while remaining_ids or active_processes:
-        while remaining_ids and len(active_processes) < max_num_processes:
-            id_to_run = remaining_ids.pop()
-            process = Process(
-                target=_run, args=(module_path, id_to_run), name=id_to_run
-            )
-            process.start()
-            active_processes.append(process)
-        for process in active_processes:
-            if not process.is_alive():
-                active_processes.remove(process)
+    def handle_exit(signum, frame):
+        """Signal handler to clean up processes on termination."""
+        import sys
+
+        inform("Cleaning up processes")
+        with process_lock:
+            for process in active_processes:
+                if process.is_alive():
+                    inform(f"Terminating process {process.name}")
+                    process.terminate()
+        sys.exit(0)
+
+    # Register signal handler
+    signal.signal(signal.SIGINT, handle_exit)
+    signal.signal(signal.SIGTERM, handle_exit)
+
+    try:
+        while remaining_ids or active_processes:
+            # Start new processes if available
+            while remaining_ids and len(active_processes) < max_num_processes:
+                id_to_run = remaining_ids.pop()
+                try:
+                    process = Process(
+                        target=_run,
+                        args=(module_path, id_to_run),
+                        name=id_to_run,
+                    )
+                    process.start()
+                    with process_lock:
+                        active_processes.append(process)
+                except Exception as e:
+                    inform(f"Error starting process for {id_to_run}: {e}")
+            # Wait for active processes to finish
+            time.sleep(1)  # Avoid busy-waiting
+            with process_lock:
+                active_processes = [
+                    process
+                    for process in active_processes
+                    if process.is_alive()
+                ]
+    finally:
+        handle_exit(None, None)
 
 
 def set_num_processes(num_processes: int) -> None:
