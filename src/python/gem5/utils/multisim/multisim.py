@@ -207,7 +207,6 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     while remaining_ids or active_processes:
         while remaining_ids and len(active_processes) < max_num_processes:
             id_to_run = remaining_ids.pop()
-            print(f"Running {id_to_run}")
             process = Process(
                 target=_run, args=(module_path, id_to_run), name=id_to_run
             )
@@ -216,7 +215,6 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
         for process in active_processes:
             if not process.is_alive():
                 active_processes.remove(process)
-    print("All simulations complete.")
 
 
 def set_num_processes(num_processes: int) -> None:
