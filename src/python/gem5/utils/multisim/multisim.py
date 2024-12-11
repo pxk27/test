@@ -209,7 +209,7 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
     active_processes = []
     remaining_ids = list(ids).copy()
     process_lock = Lock()
-    from gem5.utils.multiprocessing import Process
+    from ..multiprocessing import Process
 
     def handle_exit(signum, frame):
         """Signal handler to clean up processes on termination."""
@@ -246,6 +246,9 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
             # Wait for active processes to finish
             time.sleep(1)  # Avoid busy-waiting
             with process_lock:
+                # Using list comprehension to remove finished processes
+                # as using `remove` in a loop over the list will cause
+                # the list to be modified during iteration.
                 active_processes = [
                     process
                     for process in active_processes
