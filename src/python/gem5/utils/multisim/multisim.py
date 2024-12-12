@@ -53,8 +53,8 @@ import importlib
 import multiprocessing
 import signal
 import time
+from multiprocessing import Lock
 from pathlib import Path
-from threading import Lock
 from typing import (
     Optional,
     Set,
