@@ -442,7 +442,7 @@ BPredUnit::squashHistory(ThreadID tid, PredictorHistory* &history)
 
     // This call should delete the bpHistory.
     squash(tid, history->bpHistory);
-    
+
     delete history;
     history = nullptr;
 }
