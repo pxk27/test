@@ -538,6 +538,9 @@ class LSQUnit
         /** Distribution of cycle latency between the first time a load
          * is issued and its completion */
         statistics::Distribution loadToUse;
+        
+        /** Total number of squashed stores. */
+        statistics::Scalar addedLoadsAndStores;
     } stats;
 
   public:
