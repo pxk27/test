@@ -150,7 +150,7 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
                "count of registers freed and written back to integer free list"),
       ADD_STAT(fpWrites, statistics::units::Count::get(),
                "count of registers freed and written back to floating point free list")
-           
+
 {
     squashCycles.prereq(squashCycles);
     idleCycles.prereq(idleCycles);
@@ -181,7 +181,7 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
     serializing.flags(statistics::total);
     tempSerializing.flags(statistics::total);
     skidInsts.flags(statistics::total);
-    
+
     intWrites.prereq(intWrites);
     fpWrites.prereq(fpWrites);
 }
