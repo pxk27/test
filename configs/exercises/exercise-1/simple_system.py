@@ -12,12 +12,12 @@ system = System()
 
 # Create clock domain
 system.clk_domain = SrcClockDomain()
-system.clk_domain.clock = '3GHz'
+system.clk_domain.clock = "3GHz"
 system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set RAM size to 16GB
-system.mem_mode = 'timing'
-system.mem_ranges = [AddrRange('16GB')]
+system.mem_mode = "timing"
+system.mem_ranges = [AddrRange("16GB")]
 
 # Create a simple x86 timing CPU core
 system.cpu = X86TimingSimpleCPU()
@@ -25,7 +25,7 @@ system.cpu = X86TimingSimpleCPU()
 # Create memory bus
 system.membus = SystemXBar()
 
-cache_enabled = (input("Configure system with cache?: ").lower() == "yes")
+cache_enabled = input("Configure system with cache?: ").lower() == "yes"
 if cache_enabled:
     # Create L1 cache
     system.cpu.icache = L1ICache()
@@ -69,7 +69,7 @@ system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
 # Set path to binary file
-binary = 'tests/test-progs/sum/bin/x86/linux/sum'
+binary = "tests/test-progs/sum/bin/x86/linux/sum"
 
 # for gem5 V21 and beyond
 system.workload = SEWorkload.init_compatible(binary)
@@ -81,7 +81,7 @@ system.cpu.workload = process
 system.cpu.createThreads()
 
 # Instantiate root system
-root = Root(full_system = False, system = system)
+root = Root(full_system=False, system=system)
 m5.instantiate()
 
 # Begin simulation
@@ -89,5 +89,6 @@ print("Beginning simulation!")
 exit_event = m5.simulate()
 
 # Inspect system state
-print('Exiting @ tick {} because {}'
-      .format(m5.curTick(), exit_event.getCause()))
+print(
+    f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}"
+)
