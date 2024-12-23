@@ -4,6 +4,7 @@ name: Weekly Tests
 
 on:
   # This is triggered weekly via the 'scheduler.yaml' workflow.
+  # Allows the workflow to be manually triggered from the GitHub Actions UI.
   workflow_dispatch:
 
 jobs:
@@ -17,60 +18,52 @@ jobs:
       id: date
       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-  testlib-v-long:
-    strategy:
-      fail-fast: false
-      matrix:
-        test-type:
-        - gem5_library_example_tests
-        - gem5_resources
-        - stdlib
-        - parsec_benchmarks
-        - x86_boot_tests
+  testlib-very-long-tests:
+    name: Testlib Very Long Tests
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-    timeout-minutes: 4320  # 3 days
-    needs: get-date
+    timeout-minutes: 1440 # 24 hours
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Cache build/ALL
       uses: actions/cache@v4
       with:
-        path: build/ALL
-        key: testlib-build-all-${{ needs.get-date.outputs.date }}
+        path: build/VEGA_X86
+        key: testlib-build-vega-${{ needs.get-date.outputs.date }}
         restore-keys: |
-          testlib-build-allc
+          testlib-build-vega
 
-    - name: Run ${{ matrix.test-type }} testlib very-long tests
+    - name: Run Testlib Very Long Tests
       working-directory: ${{ github.workspace }}/tests
-      id: run-tests
       run: |
-        ./main.py run gem5/${{ matrix.test-type }} --length very-long \
-        -j$(nproc) -vv
+        ./main.py run \
+        --length=very-long \
+        -vvv \
+        -j $(nproc)
 
-    - name: Upload Results
+    - name: Upload results
       if: success() || failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.0.0
       with:
         name: |
-          weekly-tests-run-${{ github.run_number }}-\
-          g${{ matrix.test-type }}-\
+          weekly-tests-testlib-very-long-run-${{ github.run_number }}-\
           attempt-${{ github.run_attempt }}-\
           status-${{ steps.run-tests.outcome }}
-        path: tests/testing-results
 
-  gpu-v-long-tests:
+
+  gpu-test-hacc:
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/gcn-gpu:latest
     timeout-minutes: 720 # 12 hours
     needs: get-date
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: develop
 
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Cache build/VEGA_X86
       uses: actions/cache@v4
@@ -82,17 +75,22 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
-        SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-hacc-VEGA_X86-gcn_gpu-opt
+      run: |
+        ./main.py run \
+        --length=very-long \
+        -vvv \
+        -j $(nproc) \
+        --host gcn_gpu \
+        --uid SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:\
+        gpu-apu-se-hacc-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: 
+        name: |
           gpu_tests_hacc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
-        retention-days: 7
 
   gpu-test-lulesh:
     runs-on: [self-hosted, linux, x64]
@@ -114,17 +112,21 @@ jobs:
 
     - name: Run Testlib very-long GPU Test
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
-        SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-lulesh-VEGA_X86-gcn_gpu-opt
+      run: |
+        ./main.py run \
+        --length=very-long \
+        -vvv -j $(nproc) \
+        --host gcn_gpu \
+        --uid SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:\
+        gpu-apu-se-lulesh-VEGA_X86-gcn_gpu-opt
 
     - name: Upload Results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: 
+        name: |
           gpu_tests_lulesh_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
-        retention-days: 7
 
   gpu-test-pannotia-bc:
     runs-on: [self-hosted, linux, x64]
@@ -133,9 +135,8 @@ jobs:
     needs: get-date
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: develop
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Cache build/VEGA_X86
       uses: actions/cache@v4
@@ -147,17 +148,18 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
-        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-bc-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: |
+        ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu \
+        --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:\
+        gpu-apu-se-pannotia-bc-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: 
+        name: |
           gpu_tests_pannotia_bc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
-        retention-days: 7
 
   gpu-test-pannotia-color-maxmin:
     runs-on: [self-hosted, linux, x64]
@@ -180,17 +182,18 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
-        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-maxmin-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: |
+        ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu \
+        --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:\
+        gpu-apu-se-pannotia-color-maxmin-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: 
+        name: |
           gpu_tests_pannotia_color_maxmin_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
-        retention-days: 7
 
   gpu-test-pannotia-color-max:
     runs-on: [self-hosted, linux, x64]
@@ -213,19 +216,21 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
-        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-max-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: |
+        ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu \
+        --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:\
+        gpu-apu-se-pannotia-color-max-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: 
+        name: |
           gpu_tests_pannotia_color_max_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
-        retention-days: 7
 
   gpu-test-pannotia-mis-hip:
+    name: Testlib GPU Pannotia MIS HIP
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/gcn-gpu:latest
     timeout-minutes: 2160   # 36 hours
@@ -233,8 +238,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: develop
 
     - name: Cache build/VEGA_X86
       uses: actions/cache@v4
@@ -246,23 +249,30 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
-        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-mis-hip-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: |
+        ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu \
+        --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:\
+        gpu-apu-se-pannotia-mis-hip-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: 
+        name: |
           gpu_tests_pannotia_mis_hip_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
 
   dramsys-tests:
+    name: DRAMSys Tests
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
     timeout-minutes: 4320 # 3 days
+
     steps:
-    - uses: actions/checkout@v4
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
     - name: Checkout DRAMSys
       working-directory: ${{ github.workspace }}/ext/dramsys
       run: |
@@ -284,7 +294,7 @@ jobs:
         configs/example/gem5_library/dramsys/dramsys-traffic.py
 
     - name: DRAMSys Check (example/dramsys)
-      run: /build/ALL/gem5.opt configs/example/dramsys.py
+      run: ./build/ALL/gem5.opt configs/example/dramsys.py
 
   weekly-tests:
     # The dummy job is used to indicate whether the weekly tests have
@@ -292,18 +302,17 @@ jobs:
     # I.e., if we want to stop pull requests from being merged if the
     # weekly tests are failing we can add this job as a required status
     # check.
+    name: Weekly Workflow Confirmation
     runs-on: ubuntu-latest
     needs:
-    - testlib-v-long
-    - dramsys-tests
-    - gpu-tests
-    - dramsys-tests
+    - testlib-very-long-tests
     - gpu-test-hacc
     - gpu-test-lulesh
     - gpu-test-pannotia-bc
     - gpu-test-pannotia-color-maxmin
     - gpu-test-pannotia-color-max
     - gpu-test-pannotia-mis-hip
-    - gpu-v-long-tests
+    - dramsys-tests
+
     steps:
     - run: echo "The Weekly tests have passed."
