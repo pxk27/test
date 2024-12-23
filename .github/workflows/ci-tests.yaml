@@ -27,6 +27,7 @@ jobs:
     # with the hash function where this task would timeout. This approach is
     # simple, works, and still provides some level of caching.
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     steps:
     - name: Get the current date
       id: date
@@ -242,6 +243,7 @@ jobs:
         retention-days: 30
 
   gpu-tests:
+    if: github.event.pull_request.draft == false
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/gcn-gpu:latest
     timeout-minutes: 180
