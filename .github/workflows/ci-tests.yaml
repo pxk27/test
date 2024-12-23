@@ -130,7 +130,7 @@ jobs:
         restore-keys: |
           testlib-build-all
 
-    - name: Build ${{ matrix.build }
+    - name: Build ${{ matrix.build }}
       run: scons --no-compress-debug ${{ matrix.build }} -j $(nproc)
 
     - name: Upload ${{ matrix.build }} as an artifact
