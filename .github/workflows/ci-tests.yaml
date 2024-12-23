@@ -222,7 +222,6 @@ jobs:
           attempt-${{ github.run_attempt }}-\
           status-${{ steps.run-tests.outcome }}
         path: tests/testing-results
-        retention-days: 30
 
   pyunit:
     # This job runs the pyunit tests.
@@ -268,7 +267,6 @@ jobs:
           attempt-${{ github.run_attempt }}-\
           status-${{ steps.run-tests.outcome }}
         path: tests/testing-results
-        retention-days: 30
 
   gpu-tests:
     # This job runs the GPU tests.
@@ -298,7 +296,6 @@ jobs:
           ${{ github.run_attempt }}-gpu-status-\
           ${{ steps.run-tests.outcome }}-output
         path: tests/testing-results
-        retention-days: 30
 
   ci-tests:
     # This job is a status check for the pull request. If this job passes the
