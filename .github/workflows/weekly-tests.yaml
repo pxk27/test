@@ -46,7 +46,7 @@ jobs:
 
     - name: Upload results
       if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: |
           weekly-tests-testlib-very-long-run-${{ github.run_number }}-\
@@ -86,7 +86,7 @@ jobs:
 
     - name: Upload results
       if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: |
           gpu_tests_hacc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
@@ -122,7 +122,7 @@ jobs:
 
     - name: Upload Results
       if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: |
           gpu_tests_lulesh_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
@@ -155,7 +155,7 @@ jobs:
 
     - name: Upload results
       if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: |
           gpu_tests_pannotia_bc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
@@ -189,7 +189,7 @@ jobs:
 
     - name: Upload results
       if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: |
           gpu_tests_pannotia_color_maxmin_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
@@ -223,7 +223,7 @@ jobs:
 
     - name: Upload results
       if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: |
           gpu_tests_pannotia_color_max_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
@@ -256,7 +256,7 @@ jobs:
 
     - name: Upload results
       if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: |
           gpu_tests_pannotia_mis_hip_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
