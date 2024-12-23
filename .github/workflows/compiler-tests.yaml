@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: 
+        image:
         - gcc-version-14
         - gcc-version-13
         - gcc-version-12
@@ -27,7 +27,7 @@ jobs:
         - ubuntu-22.04_all-dependencies
         - ubuntu-24.04_all-dependencies
         - ubuntu-24.04_min-dependencies
-        opts: 
+        opts:
         - .opt
         - .fast
     runs-on: [self-hosted, linux, x64]

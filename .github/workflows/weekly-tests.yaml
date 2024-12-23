@@ -82,13 +82,15 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-hacc-VEGA_X86-gcn_gpu-opt
+      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
+        SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-hacc-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: gpu_tests_hacc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+        name: 
+          gpu_tests_hacc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
         retention-days: 7
 
@@ -112,13 +114,15 @@ jobs:
 
     - name: Run Testlib very-long GPU Test
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-lulesh-VEGA_X86-gcn_gpu-opt
+      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
+        SuiteUID:tests/gem5/gpu/test_gpu_apu_se.py:gpu-apu-se-lulesh-VEGA_X86-gcn_gpu-opt
 
     - name: Upload Results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: gpu_tests_lulesh_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+        name: 
+          gpu_tests_lulesh_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
         retention-days: 7
 
@@ -143,13 +147,15 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-bc-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
+        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-bc-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: gpu_tests_pannotia_bc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+        name: 
+          gpu_tests_pannotia_bc_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
         retention-days: 7
 
@@ -174,13 +180,15 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-maxmin-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
+        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-maxmin-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: gpu_tests_pannotia_color_maxmin_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+        name: 
+          gpu_tests_pannotia_color_maxmin_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
         retention-days: 7
 
@@ -205,13 +213,15 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-max-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
+        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-color-max-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: gpu_tests_pannotia_color_max_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+        name: 
+          gpu_tests_pannotia_color_max_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
         retention-days: 7
 
@@ -236,13 +246,15 @@ jobs:
 
     - name: Run Testlib GPU Tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-mis-hip-1k-128k-VEGA_X86-gcn_gpu-opt
+      run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu --uid
+        SuiteUID:tests/gem5/gpu/test_gpu_pannotia.py:gpu-apu-se-pannotia-mis-hip-1k-128k-VEGA_X86-gcn_gpu-opt
 
     - name: Upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4.0.0
       with:
-        name: gpu_tests_pannotia_mis_hip_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+        name: 
+          gpu_tests_pannotia_mis_hip_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
         path: tests/testing-results
 
   dramsys-tests:

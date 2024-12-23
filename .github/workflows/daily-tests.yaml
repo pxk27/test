@@ -68,7 +68,7 @@ jobs:
     needs: get-date
     steps:
     - name: Checkout
-    - uses: actions/checkout@v4
+      uses: actions/checkout@v4
 
     - name: Restore build/NULL cache
       uses: actions/cache@v4
@@ -102,7 +102,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt, gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
+        test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt,
+          lupv-example-ALL-x86_64-opt, gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt,
+          gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
     timeout-minutes: 1440     # 24 hours
     needs: get-date
@@ -121,12 +123,15 @@ jobs:
 
     - name: long ${{ matrix.test-type }} gem5_library_example_tests
       working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} -j $(nproc) --length=long -vv
+      run: ./main.py run --uid 
+        SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{
+        matrix.test-type }} -j $(nproc) --length=long -vv
     - name: upload results
       if: success() || failure()
       uses: actions/upload-artifact@v4
       env:
-        MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+        MY_STEP_VAR: ${{ matrix.test-type 
+          }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
       with:
         name: ${{ env.MY_STEP_VAR }}
         path: tests/testing-results
@@ -170,33 +175,6 @@ jobs:
           attempt-${{ github.run_attempt }}-\
           status-${{ steps.run-tests.outcome }}
         path: tests/testing-results
-
-  gpu-tests:
-    runs-on: [self-hosted, linux, x64]
-    container: ghcr.io/gem5/gcn-gpu:latest
-    timeout-minutes: 300
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: develop
-    - name: Build VEGA_X86/gem5.opt
-      run: scons build/VEGA_X86/gem5.opt -j`nproc`
-
-    - name: Run Testlib GPU Tests
-      working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run --length=long --skip-build -vvv -t $(nproc) --host gcn_gpu
-
-    - name: Upload results
-      if: success() || failure()
-      uses: actions/upload-artifact@v4.0.0
-      with:
-        name: |
-          gpu_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-        path: tests/testing-results
-        retention-days: 7
-
-
 
   sst-test:
     # This runs the SST-gem5 integration compilation and tests it with
