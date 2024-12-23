@@ -241,47 +241,6 @@ jobs:
         path: tests/testing-results
         retention-days: 30
 
-
-  gpu-tests:
-    runs-on: [self-hosted, linux, x64]
-    container: ghcr.io/gem5/gcn-gpu:latest
-    timeout-minutes: 180
-    needs: get-date
-    steps:
-    - uses: actions/checkout@v4
-
-      # Obtain the cache if available. If not available this will upload
-      # this job's build as the cache (assuming tests pass).
-    - name: Cache build/VEGA_X86
-      uses: actions/cache/restore@v4
-      with:
-        path: build/VEGA_X86
-        key: testlib-build-vega-{{ needs.get-date.outputs.date }}
-        restore-keys: testlib-build-vega
-
-      # Build the VEGA_X86/gem5.opt binary.
-    - name: Build VEGA_X86/gem5.opt
-      run: scons --no-compress-debug build/VEGA_X86/gem5.opt -j`nproc`
-
-      # Run the GPU tests.
-    - name: Run Testlib GPU Tests
-      working-directory: ${{ github.workspace }}/tests
-      run: ./main.py run  --skip-build -vvv -t $(nproc) --host gcn_gpu gem5/gpu
-
-      # Upload the 'tests/testing-results' directory as an artifact.
-    - name: Upload Results
-      if: success() || failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: |
-          ci-tests-run-${{ github.run_number }}-\
-          gpu-status-
-          attempt-${{ github.run_attempt }}-\
-          ${{ github.run_attempt }}-
-          status-${{ steps.run-tests.outcome }}
-        path: tests/testing-results
-        retention-days: 30
-
   gpu-tests:
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/gcn-gpu:latest
@@ -317,12 +276,7 @@ jobs:
     - pyunit
     - clang-fast-compilation
     - unittests-all-opt
-<<<<<<< HEAD
-    - gpu-tests
-=======
-    - check-for-change-id
     - gpu-tests
 
->>>>>>> 8d9263e09d (misc,tests,gpu-compute: Move some GPU tests to CI)
     steps:
     - run: echo "The CI tests have passed."
