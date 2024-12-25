@@ -72,7 +72,7 @@ jobs:
     if: github.event.pull_request.draft == false
 
     name: Testlib Quick Matrix
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
 
     steps:
