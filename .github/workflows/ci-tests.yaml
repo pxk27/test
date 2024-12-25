@@ -302,7 +302,7 @@ jobs:
   ci-tests:
     # This job is a status check for the pull request. If this job passes the
     # pull request can be merged
-    name: CI Workflow Conformation
+    name: CI Workflow Confirmation
     runs-on: ubuntu-latest
     needs:
     - testlib-quick-execution
