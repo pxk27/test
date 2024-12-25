@@ -26,6 +26,8 @@ jobs:
     # `src` directory contents and use it as a hash. We found there to be bugs
     # with the hash function where this task would timeout. This approach is
     # simple, works, and still provides some level of caching.
+    if: github.event.pull_request.draft == false
+
     runs-on: ubuntu-latest
     steps:
     - name: Get the current date
