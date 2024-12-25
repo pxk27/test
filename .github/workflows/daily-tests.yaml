@@ -9,12 +9,12 @@ on:
 jobs:
 
   get-date:
-    name: Get the current date
+    name: Current date
     runs-on: ubuntu-latest
     outputs:
       date: ${{ steps.date.outputs.date }}
     steps:
-    - name: Get the current date
+    - name: Get Current date
       id: date
       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 

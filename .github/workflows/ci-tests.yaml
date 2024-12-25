@@ -28,6 +28,7 @@ jobs:
     # simple, works, and still provides some level of caching.
     if: github.event.pull_request.draft == false
 
+    name: Current Date
     runs-on: ubuntu-latest
     steps:
     - name: Get the current date
@@ -169,7 +170,7 @@ jobs:
     # This job runs the testlib quick tests.
     if: github.event.pull_request.draft == false
 
-    name: Run TestLib Quick Tests
+    name: TestLib Quick Tests
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
     needs:
@@ -229,6 +230,7 @@ jobs:
     # This job runs the pyunit tests.
     if: github.event.pull_request.draft == false
 
+    name: Pyunit Tests
     runs-on: [self-hosted, linux, x64]
     container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
     needs: testlib-quick-gem5-builds
