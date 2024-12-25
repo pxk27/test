@@ -282,6 +282,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Cache build/VEGA_X86
+      uses: actions/cache/restore@v4
+      with:
+        path: build/VEGA_X86
+        key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+        restore-keys: testlib-build-vega
+
     - name: Build VEGA_X86/gem5.opt
       run: scons build/VEGA_X86/gem5.opt -j`nproc`
 
