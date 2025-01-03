@@ -539,7 +539,7 @@ class LSQUnit
          * is issued and its completion */
         statistics::Distribution loadToUse;
 
-        /** Total number of squashed stores. */
+        /** Total number of loads and stores written to the load store queue */
         statistics::Scalar addedLoadsAndStores;
     } stats;
 

@@ -146,9 +146,9 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
                "count of temporary serializing insts renamed"),
       ADD_STAT(skidInsts, statistics::units::Count::get(),
                "count of insts added to the skid buffer"),
-      ADD_STAT(intWrites, statistics::units::Count::get(),
+      ADD_STAT(intReturned, statistics::units::Count::get(),
                "count of registers freed and written back to integer free list"),
-      ADD_STAT(fpWrites, statistics::units::Count::get(),
+      ADD_STAT(fpReturned, statistics::units::Count::get(),
                "count of registers freed and written back to floating point free list")
 
 {
@@ -182,8 +182,8 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
     tempSerializing.flags(statistics::total);
     skidInsts.flags(statistics::total);
 
-    intWrites.prereq(intWrites);
-    fpWrites.prereq(fpWrites);
+    intReturned.prereq(intReturned);
+    fpReturned.prereq(fpReturned);
 }
 
 void
@@ -1010,10 +1010,10 @@ Rename::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
             freeList->addReg(hb_it->prevPhysReg);
         }
         if (hb_it->prevPhysReg->classValue()== FloatRegClass) {
-           ++stats.fpWrites;
+           ++stats.fpReturned;
         }
         if (hb_it->prevPhysReg->classValue()== IntRegClass) {
-           ++stats.intWrites;
+           ++stats.intReturned;
         }
 
 

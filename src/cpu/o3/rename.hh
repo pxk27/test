@@ -536,10 +536,10 @@ class Rename
         statistics::Scalar tempSerializing;
         /** Number of instructions inserted into skid buffers. */
         statistics::Scalar skidInsts;
-        /** Count of registers freed and written back to integer free list*/
-        statistics::Scalar intWrites;
-        /** Count of registers freed and written back to floating point free list*/
-        statistics::Scalar fpWrites;
+        /** Number of registers freed and written back to integer free list*/
+        statistics::Scalar intReturned;
+        /** Number of registers freed and written back to floating point free list*/
+        statistics::Scalar fpReturned;
     } stats;
 };
 
