@@ -49,6 +49,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <algorithm>
 
 #include "base/compiler.hh"
 #include "base/logging.hh"
