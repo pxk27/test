@@ -263,8 +263,8 @@ def get_resource(
 
             if "md5sum" not in resource_json:
                 raise Exception(
-                    f"The resource '{resource_json["id"]}' and "
-                    f"'{resource_json["resoruce_version"]}' does not contain an md5sum"
+                    f"The resource '{resource_json['id']}' and "
+                    f"'{resource_json['resoruce_version']}' does not contain an md5sum"
                 )
             if md5 == resource_json["md5sum"]:
                 # In this case, the file has already been download, no need to

@@ -981,8 +981,8 @@ def obtain_resource(
         )
     if resource_json["category"] not in _get_resource_json_type_map:
         raise Exception(
-            f"Resource category '{resource_json["category"]}'"
-            f"for {resource_json["id"]} version {resource_json["resource_version"]} not found.\n"
+            f"Resource category '{resource_json['category']}'"
+            f"for {resource_json['id']} version {resource_json['resource_version']} not found.\n"
             f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
         )
     resources_category = resource_json["category"]
@@ -1194,10 +1194,18 @@ def _get_workload(
             quiet=quiet,
         )
 
-        assert resource_match["category"] in _get_resource_json_type_map, (
-            f"Resource category '{resource_match["category"]}' not found.\n"
-            f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
-        )
+        if "category" not in resource_match:
+            raise Exception(
+                f"Resource JSON for resource '{resource_match['id']}' does not contain a "
+                "category field."
+            )
+        if resource_match["category"] not in _get_resource_json_type_map:
+            raise Exception(
+                f"Resource category '{resource_match['category']}'"
+                f"for {resource_match['id']} version {resource_match['resource_version']} not found.\n"
+                f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
+            )
+
         resource_class = _get_resource_json_type_map[
             resource_match["category"]
         ]
