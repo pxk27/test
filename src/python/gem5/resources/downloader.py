@@ -260,7 +260,7 @@ def get_resource(
                 md5 = md5_file(Path(to_path))
             else:
                 md5 = md5_dir(Path(to_path))
-            print(f"md5: {md5}")
+
             if "md5sum" not in resource_json:
                 raise Exception(
                     f"The resource '{resource_json["id"]}' and "
