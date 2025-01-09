@@ -974,6 +974,17 @@ def obtain_resource(
 
     # Obtain the type from the JSON. From this we will determine what subclass
     # of `AbstractResource` we are to create and return.
+    if "category" not in resource_json:
+        raise Exception(
+            f"Resource JSON for resource '{resource_id}' does not contain a "
+            "category field."
+        )
+    if resource_json["category"] not in _get_resource_json_type_map:
+        raise Exception(
+            f"Resource category '{resource_json["category"]}'"
+            f"for {resource_json["id"]} version {resource_json["resource_version"]} not found.\n"
+            f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
+        )
     resources_category = resource_json["category"]
 
     if resources_category == "resource":
@@ -1054,7 +1065,21 @@ def _get_suite(
     """
     # Mapping input groups to workload IDs
     id_input_group_dict = {}
+    if "workloads" not in suite:
+        raise Exception(
+            f"Suite {suite['id']} version {suite['resource_version']} does not contain a 'workloads' field."
+        )
+
     for workload in suite["workloads"]:
+        if "input_group" not in workload:
+            raise Exception(
+                f"Workload {workload['id']} version {workload['resource_version']} does not contain an 'input_group' field."
+            )
+        if "id" not in workload:
+            raise Exception(
+                f"The workload with input groups {workload['input_group']} does not contain an 'id' field."
+            )
+
         id_input_group_dict[workload["id"]] = workload["input_group"]
 
     # Fetching the workload resources as a list of dicts
@@ -1119,6 +1144,18 @@ def _get_workload(
     params = {}
 
     db_query = []
+
+    if "resources" not in workload:
+        raise Exception(
+            f"Workload {workload['id']} version {workload['resource_version']} does not contain a 'resources' field."
+        )
+
+    if not isinstance(workload["resources"], dict):
+        raise Exception(
+            f"Workload {workload['id']} version {workload['resource_version']} contains a 'resources' field that is not a dictionary."
+            "The 'resources' field should be a dictionary mapping resource category to resource ID and version."
+        )
+
     for resource in workload["resources"].values():
         db_query.append(
             ClientQuery(
@@ -1157,6 +1194,10 @@ def _get_workload(
             quiet=quiet,
         )
 
+        assert resource_match["category"] in _get_resource_json_type_map, (
+            f"Resource category '{resource_match["category"]}' not found.\n"
+            f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
+        )
         resource_class = _get_resource_json_type_map[
             resource_match["category"]
         ]
@@ -1172,6 +1213,7 @@ def _get_workload(
             "additional_params" in workload.keys()
             and workload["additional_params"]
         ):
+            assert isinstance(workload["additional_params"], dict)
             for key in workload["additional_params"].keys():
                 assert isinstance(key, str)
                 value = workload["additional_params"][key]
@@ -1194,6 +1236,17 @@ def _get_to_path_and_downloader_partial(
     gem5_version: str,
     quiet: bool,
 ) -> Tuple[str, Optional[partial]]:
+
+    if "resource_version" not in resource_json:
+        raise Exception(
+            f"Resource {resource_json['id']} does not contain a resource version"
+        )
+    if not isinstance(resource_json["resource_version"], str):
+        raise Exception(
+            f"Resource {resource_json['id']} does not contain a string resource version."
+            "Resources version should follow the format 'x.y.z'"
+        )
+
     resource_id = resource_json["id"]
     resource_version = resource_json["resource_version"]
     # This is is used to store the partial function which is used to download
