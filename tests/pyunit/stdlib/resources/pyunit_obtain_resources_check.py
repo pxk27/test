@@ -172,3 +172,100 @@ class TestObtainResourcesCheck(unittest.TestCase):
             "Resource with ID 'test-binary-resource' not found."
             in str(context.exception)
         )
+
+    def test_obtain_resources_with_invalid_category(self, mock_create_client):
+        with self.assertRaises(Exception) as context:
+            obtain_resource(
+                resource_id="test-invalid-category-resource",
+                resource_directory=self.get_resource_dir(),
+                resource_version="1.0.0",
+            )
+        self.assertTrue(
+            "Resource category 'invalid-category'for test-invalid-category-resource version 1.0.0 not found.\n"
+            "Valid categories are disk-image, binary, kernel, checkpoint, git, bootloader, file, directory, "
+            "simpoint, simpoint-directory, resource, looppoint-pinpoint-csv, looppoint-json, suite, workload, elfie-info."
+            in str(context.exception)
+        )
+
+    def test_obtain_resoruces_with_missing_category(self, mock_create_client):
+        with self.assertRaises(Exception) as context:
+            obtain_resource(
+                resource_id="test-missing-category-resource",
+                resource_directory=self.get_resource_dir(),
+                resource_version="1.0.0",
+            )
+        self.assertTrue(
+            "Resource JSON for resource 'test-missing-category-resource' does not contain a category field."
+            in str(context.exception)
+        )
+
+    def test_obtain_resources_with_missing_resoruces_in_worklaod(
+        self, mock_create_client
+    ):
+        with self.assertRaises(Exception) as context:
+            obtain_resource(
+                resource_id="test-workload-no-resources-field",
+                resource_directory=self.get_resource_dir(),
+                resource_version="1.0.0",
+            )
+        self.assertTrue(
+            "Workload test-workload-no-resources-field version 1.0.0 does not contain a 'resources' field."
+            in str(context.exception)
+        )
+
+    def test_obtain_resources_with_wrong_resources_type_in_workload(
+        self, mock_create_client
+    ):
+        with self.assertRaises(Exception) as context:
+            obtain_resource(
+                resource_id="test-workload-invalid-resources-field",
+                resource_directory=self.get_resource_dir(),
+                resource_version="1.0.0",
+            )
+        self.assertTrue(
+            "Workload test-workload-invalid-resources-field version 1.0.0 contains a 'resources' field that is not a dictionary."
+            "The 'resources' field should be a dictionary mapping resource category to resource ID and version."
+            in str(context.exception)
+        )
+
+    def test_obtain_resources_with_missing_workloads_in_suite(
+        self, mock_create_client
+    ):
+        with self.assertRaises(Exception) as context:
+            obtain_resource(
+                resource_id="tests-no-workload-field-suite",
+                resource_directory=self.get_resource_dir(),
+                resource_version="1.0.0",
+            )
+        self.assertTrue(
+            "Suite tests-no-workload-field-suite version 1.0.0 does not contain a 'workloads' field."
+            in str(context.exception)
+        )
+
+    def test_obtain_resources_with__no_id_in_workloads_in_suite(
+        self, mock_create_client
+    ):
+        with self.assertRaises(Exception) as context:
+            obtain_resource(
+                resource_id="tests-no-id-in-workload-field-suite",
+                resource_directory=self.get_resource_dir(),
+                resource_version="1.0.0",
+            )
+        self.assertTrue(
+            "The workload with input groups ['testtag1', 'testtag2'] does not contain an 'id' field."
+            in str(context.exception)
+        )
+
+    def test_obtain_resources_with__no_input_group_in_workloads_in_suite(
+        self, mock_create_client
+    ):
+        with self.assertRaises(Exception) as context:
+            obtain_resource(
+                resource_id="tests-no-input-group-in-workload-field-suite",
+                resource_directory=self.get_resource_dir(),
+                resource_version="1.0.0",
+            )
+        self.assertTrue(
+            "Workload simple-workload-1 version 1.0.0 does not contain an 'input_group' field."
+            in str(context.exception)
+        )
