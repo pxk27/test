@@ -187,7 +187,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             in str(context.exception)
         )
 
-    def test_obtain_resoruces_with_missing_category(self, mock_create_client):
+    def test_obtain_resources_with_missing_category(self, mock_create_client):
         with self.assertRaises(Exception) as context:
             obtain_resource(
                 resource_id="test-missing-category-resource",
@@ -199,7 +199,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             in str(context.exception)
         )
 
-    def test_obtain_resources_with_missing_resoruces_in_worklaod(
+    def test_obtain_resources_with_missing_resources_in_workload(
         self, mock_create_client
     ):
         with self.assertRaises(Exception) as context:
@@ -242,7 +242,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             in str(context.exception)
         )
 
-    def test_obtain_resources_with__no_id_in_workloads_in_suite(
+    def test_obtain_resources_with_no_id_in_workloads_in_suite(
         self, mock_create_client
     ):
         with self.assertRaises(Exception) as context:
@@ -256,7 +256,7 @@ class TestObtainResourcesCheck(unittest.TestCase):
             in str(context.exception)
         )
 
-    def test_obtain_resources_with__no_input_group_in_workloads_in_suite(
+    def test_obtain_resources_with_no_input_group_in_workloads_in_suite(
         self, mock_create_client
     ):
         with self.assertRaises(Exception) as context:

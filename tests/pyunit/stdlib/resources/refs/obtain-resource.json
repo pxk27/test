@@ -113,7 +113,7 @@
     {
         "category": "workload",
         "id": "test-workload-no-resources-field",
-        "description": "test description of missng field in workload",
+        "description": "test description of missing field in workload",
         "function": "set_kernel_disk_workload",
         "additional_params": {
             "readfile_contents": "echo 'Boot successful'; m5 exit"
