@@ -67,7 +67,6 @@ cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
     l1d_size="64KiB", l1i_size="64KiB", l2_size="1MiB"
 )
 
-# Main memory
 from gem5.components.memory import DualChannelDDR4_2400
 
 memory = DualChannelDDR4_2400(size="3GiB")
@@ -90,19 +89,6 @@ workload = obtain_resource("x86-ubuntu-24.04-boot-with-systemd")
 board.set_workload(workload)
 
 
-def exit_event_handler():
-    print("First exit: kernel booted")
-    processor.switch()
-    yield False  # gem5 is now executing systemd startup
-    print("Second exit: Started `after_boot.sh` script")
-    # m5.stats.dump()
-    yield False  # gem5 is now executing the `after_boot.sh` script
-    print("Third exit: Finished `after_boot.sh` script")
-    # The after_boot.sh script will run a script if it is passed via
-    # m5 readfile. This is the last exit event before the simulation exits.
-    yield True
-
-
 def max_tick_handler_end_reset():
     m5.stats.reset()
     m5.stats.dump()
@@ -112,9 +98,6 @@ def max_tick_handler_end_reset():
 simulator = Simulator(
     board=board,
     on_exit_event={
-        # Here we want override the default behavior for the first m5 exit
-        # exit event.
-        ExitEvent.EXIT: exit_event_handler(),
         ExitEvent.MAX_TICK: max_tick_handler_end_reset(),
     },
 )
@@ -178,7 +161,9 @@ def is_match_key(key, match_list):
 not_reset_properly = {}
 for key, value in end_reset_dict.items():
     # Get stats that weren't reset properly.
-    # We don't consider stats that had a value of 0 or nan in the simulation with no resets, as those values can't tell us anything. If the stats from both simulations have values of 0, there is no telling if the stat actually reset or not.
+    # We don't consider stats that had a value of 0 or nan in the simulation with no resets,
+    # as those values can't tell us anything. If the stats from both simulations have values of 0,
+    # there is no telling if the stat actually reset or not.
     if (
         not (value == "nan" or float(value) == 0.0)
         and not (no_reset_dict[key] == "0" or no_reset_dict[key] == "nan")

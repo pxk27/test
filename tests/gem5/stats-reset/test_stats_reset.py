@@ -26,22 +26,24 @@
 
 from testlib import *
 
-gem5_verify_config(
-    name="stats-base-case",
-    fixtures=(),
-    verifiers=[],
-    config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "stats-reset",
-        "configs",
-        "x86-ubuntu-run-base.py",
-    ),
-    config_args=[],
-    valid_isas=(constants.all_compiled_tag,),
-    length=constants.quick_tag,
-)
+# This only needs to be run when the comparison stats file needs
+# to be updated.
+# gem5_verify_config(
+#     name="stats-base-case",
+#     fixtures=(),
+#     verifiers=[],
+#     config=joinpath(
+#         config.base_dir,
+#         "tests",
+#         "gem5",
+#         "stats-reset",
+#         "configs",
+#         "x86-ubuntu-run-base.py",
+#     ),
+#     config_args=[],
+#     valid_isas=(constants.all_compiled_tag,),
+#     length=constants.quick_tag,
+# )
 
 gem5_verify_config(
     name="stats-end-reset-test",

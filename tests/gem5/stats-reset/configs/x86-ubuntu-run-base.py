@@ -32,6 +32,7 @@ This simulation runs for 15 billion ticks, then dumps the stats and exits.
 By itself, it doesn't test if the stats reset correctly. However, the stats.txt
 file it generates is used as a baseline comparison for the other two tests.
 
+It is only used to generate a reference file, so it is not run as part of the tests.
 """
 
 import shutil
