@@ -43,7 +43,6 @@ import sys
 
 import m5
 
-from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
@@ -161,12 +160,9 @@ def is_match_key(key, match_list):
 not_reset_properly = {}
 for key, value in end_reset_dict.items():
     # Get stats that weren't reset properly.
-    # We don't consider stats that had a value of 0 or nan in the simulation with no resets,
-    # as those values can't tell us anything. If the stats from both simulations have values of 0,
-    # there is no telling if the stat actually reset or not.
     if (
-        not (value == "nan" or float(value) == 0.0)
-        and not (no_reset_dict[key] == "0" or no_reset_dict[key] == "nan")
+        value != "nan"
+        and float(value) != 0.0
         and not is_match_key(key, exclude_from_check)
         and not is_match_key(key, uncertain_exclude_from_check)
     ):

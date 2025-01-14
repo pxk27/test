@@ -41,7 +41,6 @@ from pathlib import Path
 import m5
 from m5.stats.gem5stats import get_simstat
 
-from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
