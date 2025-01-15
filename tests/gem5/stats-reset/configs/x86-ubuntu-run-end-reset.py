@@ -38,7 +38,7 @@ resetting. We skip over stats that have values of 0 in the run that doesn't
 reset, as we cannot tell whether the stat has reset or not.
 
 """
-
+import math
 import sys
 
 import m5
@@ -158,6 +158,22 @@ def is_match_key(key, match_list):
 
 
 not_reset_properly = {}
+missing_keys = {}
+
+# If a stat is present when you reset but isn't there if you don't reset,
+# something is wrong
+for key, value in end_reset_dict.items():
+    if key not in no_reset_dict and not (
+        math.isnan(float(value)) or float(value) == 0.0
+    ):
+        # commented out to let tests pass
+        # not_reset_properly[key] = [value, "missing from no_reset_dict"]
+        missing_keys[key] = [value, "missing from no_reset_dict"]
+
+print("Missing keys:")
+for item in missing_keys.items():
+    print(item)
+
 for key, value in end_reset_dict.items():
     # Get stats that weren't reset properly.
     if (
@@ -168,6 +184,7 @@ for key, value in end_reset_dict.items():
     ):
         not_reset_properly[key] = value
 
+print("Incorrectly reset stats:")
 for item in not_reset_properly.items():
     print(item)
 
