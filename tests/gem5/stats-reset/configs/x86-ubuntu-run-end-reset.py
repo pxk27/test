@@ -30,12 +30,12 @@ configs/example/gem5_library/x86-ubuntu-run-with-kvm-no-perf.py
 
 This test runs an X86 Ubuntu 24.04 boot for 15 billion ticks. It resets at 15
 billion ticks, then dumps the stats. With the exception of a few stats that
-should not be reset with m5.stats.reset(), all of the stats should have a value
-of 0, nan, or simply not be present. To confirm that all of the stats have been
-reset, we check their values against stats from a simulation with the
-same configuration and workload that runs for 15 billion ticks without
-resetting. We skip over stats that have values of 0 in the run that doesn't
-reset, as we cannot tell whether the stat has reset or not.
+should not be reset with m5.stats.reset(), all stats should have a value
+of 0, nan, or simply not be present. We also check that no new stats appear
+when you reset compared to when you don't.
+
+We skip over stats that have values of 0 in the run that doesn't reset, as we
+cannot tell whether the stat has reset or not.
 
 """
 import math
@@ -101,14 +101,14 @@ simulator = Simulator(
     },
 )
 
-simulator.set_max_ticks(15000000000)  # 15,000,000,000 ticks
+simulator.set_max_ticks(15_000_000_000)  # 15 ms
 simulator.run()
 
 end_reset_dict = {}
 no_reset_dict = {}
 
 
-def read_stats_files(filepath, stats_dict):
+def read_stats_files(filepath: str, stats_dict: dict) -> None:
     with open(filepath) as stats:
         for line in stats:
             tmp = line.split()
@@ -120,7 +120,8 @@ def read_stats_files(filepath, stats_dict):
 read_stats_files("./gem5/stats-reset/base-case-stats.txt", no_reset_dict)
 read_stats_files(f"{m5.options.outdir}/stats.txt", end_reset_dict)
 
-# These stats are either constant, should carry over across resets, or have to do with the host
+# These stats are either constant, should carry over across resets, or have to
+# do with the host
 exclude_from_check = [
     "finalTick",
     "simFreq",
@@ -132,8 +133,10 @@ exclude_from_check = [
     "peakBW",
 ]
 
-# These are the stats that don't reset when m5.stats.reset() is called, and which I don't know if they are supposed to reset
-# idleFraction is in the uncertain list because it could be calculated from the total number of ticks instead of the number of ticks elapsed between resets.
+# These are the stats that don't reset when m5.stats.reset() is called, and
+# which I don't know if they are supposed to reset
+# idleFraction is in the uncertain list because it could be calculated from the
+# total number of ticks instead of the number of ticks elapsed between resets.
 uncertain_exclude_from_check = [
     "tagsInUse",
     "occupancies",
@@ -150,7 +153,7 @@ uncertain_exclude_from_check = [
 
 # checks to see if any items in a list match with a key/ part of a key.
 # This is used to filter for stats that appear for several components
-def is_match_key(key, match_list):
+def is_match_key(key: str, match_list: list[str]) -> bool:
     if len([item for item in match_list if item in key]) == 0:
         return False
     else:

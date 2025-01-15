@@ -92,7 +92,7 @@ board.set_workload(workload)
 def max_tick_handler_middle_reset():
     m5.stats.dump()
     m5.stats.reset()
-    simulator.set_max_ticks(10000000000)  # 10,000,000,000
+    simulator.set_max_ticks(10_000_000_000)  # 10 ms
     yield False
     m5.stats.dump()
 
@@ -104,7 +104,7 @@ simulator = Simulator(
     },
 )
 
-simulator.set_max_ticks(5000000000)  # 5,000,000,000
+simulator.set_max_ticks(5_000_000_000)  # 5 ms
 
 simulator.run()
 
@@ -112,30 +112,31 @@ middle_reset_dict = defaultdict(list)
 no_reset_dict = defaultdict(list)
 
 
-def read_stats_files(filepath, stats_dict):
+def read_stats_files(filepath: str, stats_dict: defaultdict[list]) -> None:
     with open(filepath) as stats:
         for line in stats:
             tmp = line.split()
             if len(tmp) > 1:
                 stats_dict[tmp[0]].append(
                     tmp[1]
-                )  # The key is the name of the stat, the value is a list of numerical stat values in string format, e.g. "12".
+                )  # The key is the name of the stat, the value is a list of
+                # numerical stat values in string format, e.g. "12".
     stats_dict.pop("----------", None)
 
 
 # Checks to see if any items in a list match with a key/ part of a key.
 # This is used to detect stats that appear for several components.
-def is_match_key(key, match_list):
+def is_match_key(key: str, match_list: list[str]):
     if len([item for item in match_list if item in key]) == 0:
         return False
     else:
         return True
 
 
-def check_both_nan_or_both_zero(val_1, val_2):
+def check_both_nan_or_both_zero(val_1: float, val_2: float) -> None:
     if math.isnan(val_1) and math.isnan(val_2):
         return True
-    if float(val_1) == 0.0 and float(val_2) == 0.0:
+    if val_1 == 0.0 and val_2 == 0.0:
         return True
     return False
 
@@ -145,7 +146,8 @@ read_stats_files(f"{m5.options.outdir}/stats.txt", middle_reset_dict)
 
 not_reset_properly = {}
 
-# These stats are either constant, should carry over across resets, or have to do with the host
+# These stats are either constant, should carry over across resets, or have to
+# do with the host
 exclude_from_check = [
     "hostSeconds",
     "hostTickRate",
@@ -154,21 +156,24 @@ exclude_from_check = [
     "hostOpRate",
     "UNDEFINED",
     "stdev",
-    # Below are stats that I am not sure should reset/ I don't know how they are calculated
+    # Below are stats that I am not sure should reset/ I don't know how they
+    # are calculated
     "occupancies",
     "tagsInUse",
     "bwRead",
     "bwInstRead",
     "bwTotal",
     "bwWrite",
-    # For some reason, the stat for board.cache_hierarchy.dptw_caches0.tags.ageTaskId_1024
-    # ends with ::3 when the simulation is reset in the middle, but ends with ::2 and ::4
-    # in the reference file.
+    # For some reason, the stat for
+    # board.cache_hierarchy.dptw_caches0.tags.ageTaskId_1024
+    # ends with ::3 when the simulation is reset in the middle, but ends with
+    # ::2 and ::4 in the reference file.
     "ageTaskId_1024",
-    # Not sure how this one is calculated. If it is included with check_same, it causes
-    # the test to fail with the following stat and values:
+    # Not sure how this one is calculated. If it is included with check_same,
+    # it causes the test to fail with the following stat and values:
     # board.cache_hierarchy.l2bus.snoopFanout::max_value, 2.0 (no reset),
-    # 2.0 (first 5 billion ticks of this test), 1.0 (the following 10 billion ticks of this test after reset)
+    # 2.0 (first 5 billion ticks of this test), 1.0 (the following 10 billion
+    # ticks of this test after reset)
     "snoopFanout::max_value",
 ]
 
@@ -189,7 +194,8 @@ check_same = [
 
 # Currently, the stats in this list are not being checked.
 # Some stats can be calculated from the values of the first and second dumps
-# using a weighted average based on the number of ticks elasped in each dump, but others cannot.
+# using a weighted average based on the number of ticks elasped in each dump,
+# but others cannot.
 check_avg = [
     "demandMissRate",
     "overallMissRate",
@@ -213,7 +219,8 @@ missing_keys = {}
 # something is wrong
 for key, value in no_reset_dict.items():
     if key not in middle_reset_dict:
-        # not_reset_properly[key] = [value, "missing from middle_reset_dict"] # commented out to let tests pass
+        # commented out to let tests pass
+        # not_reset_properly[key] = [value, "missing from middle_reset_dict"]
         missing_keys[key] = [value, "missing from middle_reset_dict"]
 
 # If a stat is present when you reset but isn't there if you don't reset,
@@ -221,7 +228,8 @@ for key, value in no_reset_dict.items():
 
 for key, value in middle_reset_dict.items():
     if key not in no_reset_dict:
-        # not_reset_properly[key] = [value, "missing from no_reset_dict"] # commented out to let tests pass
+        # commented out to let tests pass
+        # not_reset_properly[key] = [value, "missing from no_reset_dict"]
         missing_keys[key] = [value, "missing from no_reset_dict"]
 
 print("Missing keys:")
@@ -230,7 +238,8 @@ for item in missing_keys.items():
 
 for key, value in middle_reset_dict.items():
     if not is_match_key(key, exclude_from_check) and key not in missing_keys:
-        # Check stats that count up over time but reset when m5.stats.reset is called.
+        # Check stats that count up over time but reset when m5.stats.reset is
+        # called.
         # These stats can be added together.
         # total value = stat from 0 to 5 billion ticks + stat from 5 billion to
         # 15 billion ticks
@@ -246,8 +255,8 @@ for key, value in middle_reset_dict.items():
                 if check_both_nan_or_both_zero(middle_reset_sum, no_reset_val):
                     continue
 
-                # The energy stats may be slightly off due to floating point errors.
-                # This rounds them to avoid that.
+                # The energy stats may be slightly off due to floating point
+                # errors. This rounds them to avoid that.
 
                 if is_match_key(key, ["Energy"]):
                     middle_reset_sum = round(middle_reset_sum, 4)
@@ -278,14 +287,17 @@ for key, value in middle_reset_dict.items():
 
             if len(value) == 2:
                 second_part_val = float(value[1])
-                # for now, skip stats that are averages. We can't calculate the averages
-                # by using the formula below, so we would have to look into how each
-                # average stat is implemented to add them to the tests
+                # for now, skip stats that are averages. We can't calculate the
+                # averages by using the formula below, so we would have to look
+                # into how each average stat is implemented to add them to the
+                # tests.
 
                 # if is_match_key(key, check_avg):
-                #     temp_sum = round(first_part_val * (1/3) + second_part_val * (2/3), 4)
+                #     temp_sum = round(first_part_val * (1/3) + second_part_val
+                # * (2/3), 4)
                 #     if temp_sum != round(no_reset_val, 4):
-                #         not_reset_properly[key] = [no_reset_val, temp_sum, "average, length 2"]
+                #         not_reset_properly[key] = [no_reset_val, temp_sum,
+                # "average, length 2"]
 
                 # check stats that are constants and/or maximum values
                 if is_match_key(key, check_same):
