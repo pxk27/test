@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2023-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,6 @@ from collections import defaultdict
 
 import m5
 
-from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
@@ -145,6 +144,7 @@ read_stats_files("./gem5/stats-reset/base-case-stats.txt", no_reset_dict)
 read_stats_files(f"{m5.options.outdir}/stats.txt", middle_reset_dict)
 
 not_reset_properly = {}
+missing_keys = {}
 
 # These stats are either constant, should carry over across resets, or have to
 # do with the host
@@ -213,28 +213,21 @@ check_avg = [
     "ipc",
 ]
 
-missing_keys = {}
 
 # If a stat is present when you don't reset but goes missing if you reset,
 # something is wrong
 for key, value in no_reset_dict.items():
-    if key not in middle_reset_dict:
-        # commented out to let tests pass
-        # not_reset_properly[key] = [value, "missing from middle_reset_dict"]
-        missing_keys[key] = [value, "missing from middle_reset_dict"]
+    if key not in middle_reset_dict and not is_match_key(
+        key, exclude_from_check
+    ):
+        missing_keys[key] = [value, "Key missing if you reset in the middle"]
 
 # If a stat is present when you reset but isn't there if you don't reset,
 # something is wrong
 
 for key, value in middle_reset_dict.items():
-    if key not in no_reset_dict:
-        # commented out to let tests pass
-        # not_reset_properly[key] = [value, "missing from no_reset_dict"]
-        missing_keys[key] = [value, "missing from no_reset_dict"]
-
-print("Missing keys:")
-for item in missing_keys.items():
-    print(item)
+    if key not in no_reset_dict and not is_match_key(key, exclude_from_check):
+        missing_keys[key] = [value, "Key missing if you don't reset"]
 
 for key, value in middle_reset_dict.items():
     if not is_match_key(key, exclude_from_check) and key not in missing_keys:
@@ -263,7 +256,9 @@ for key, value in middle_reset_dict.items():
                     no_reset_val = round(no_reset_val, 4)
                 if no_reset_val != middle_reset_sum:
                     not_reset_properly[key] = [
+                        "reference value:",
                         no_reset_val,
+                        "test value",
                         middle_reset_sum,
                         "add, length 2",
                     ]
@@ -273,7 +268,9 @@ for key, value in middle_reset_dict.items():
                     continue
                 if no_reset_val != middle_reset_sum:
                     not_reset_properly[key] = [
+                        "reference value:",
                         no_reset_val,
+                        "test value",
                         middle_reset_sum,
                         "add, length 1",
                     ]
@@ -308,8 +305,11 @@ for key, value in middle_reset_dict.items():
                         and second_part_val != no_reset_val
                     ):
                         not_reset_properly[key] = [
+                            "reference value:",
                             no_reset_val,
+                            "first test value:",
                             first_part_val,
+                            "second test value:",
                             second_part_val,
                             "constant, length 2",
                         ]
@@ -321,7 +321,9 @@ for key, value in middle_reset_dict.items():
                     temp_sum = round(first_part_val, 4)
                     if temp_sum != round(no_reset_val, 4):
                         not_reset_properly[key] = [
+                            "reference value:",
                             no_reset_val,
+                            "test value:",
                             temp_sum,
                             "average, length 1",
                         ]
@@ -330,15 +332,26 @@ for key, value in middle_reset_dict.items():
                 if is_match_key(key, check_same):
                     if first_part_val != no_reset_val:
                         not_reset_properly[key] = [
+                            "reference value:",
                             no_reset_val,
+                            "test value:",
                             first_part_val,
                             "constant, length 1",
                         ]
 
-print("Incorrectly reset stats:")
-for item in not_reset_properly.items():
-    print(item)
 
-if len(not_reset_properly) > 0:
-    print(f"{len(not_reset_properly)} stats did not reset properly!")
+def print_failed_stats(fail_dict: dict, message: str) -> None:
+    if fail_dict:
+        print(f"{len(fail_dict)} {message}")
+        for item in fail_dict.items():
+            print(item)
+
+
+print_failed_stats(not_reset_properly, "incorrectly reset stats:")
+print_failed_stats(
+    missing_keys,
+    "stats missing from either the test or reference stats.txt files:",
+)
+
+if missing_keys or not_reset_properly:
     sys.exit(1)

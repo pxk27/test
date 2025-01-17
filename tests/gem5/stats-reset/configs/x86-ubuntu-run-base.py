@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2023-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,10 +37,8 @@ tests.
 """
 
 import shutil
-from pathlib import Path
 
 import m5
-from m5.stats.gem5stats import get_simstat
 
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.processors.cpu_types import CPUTypes

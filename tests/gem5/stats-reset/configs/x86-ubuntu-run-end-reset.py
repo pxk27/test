@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2023-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -128,8 +128,7 @@ exclude_from_check = [
     "hostSeconds",
     "hostMemory",
     "UNDEFINED",
-    "clk_domain.clock",
-    "voltage_domain.voltage",
+    "clk_domain",
     "peakBW",
 ]
 
@@ -140,24 +139,23 @@ exclude_from_check = [
 uncertain_exclude_from_check = [
     "tagsInUse",
     "occupancies",
+    "occupanciesTaskId",
     "avgOccs",
     "ageTaskId_1024",
     "ratioOccsTaskId",
-    "pwrStateTime::IDLE",
-    "pwrStateResidencyTicks::ON",
-    "pwrStateResidencyTicks::OFF",
+    "pwrStateTime",
+    "pwrStateResidencyTicks",
     "idleFraction",
     "notIdleFraction",
 ]
 
 
-# checks to see if any items in a list match with a key/ part of a key.
-# This is used to filter for stats that appear for several components
-def is_match_key(key: str, match_list: list[str]) -> bool:
-    if len([item for item in match_list if item in key]) == 0:
-        return False
-    else:
-        return True
+def is_excluded(key: str) -> bool:
+    return bool(
+        set(key.replace("::", ".").split(".")).intersection(
+            set(exclude_from_check + uncertain_exclude_from_check)
+        )
+    )
 
 
 not_reset_properly = {}
@@ -167,30 +165,29 @@ missing_keys = {}
 # something is wrong
 for key, value in end_reset_dict.items():
     if key not in no_reset_dict and not (
-        math.isnan(float(value)) or float(value) == 0.0
+        math.isnan(float(value))
+        or float(value) == 0.0
+        and not is_excluded(key)
     ):
-        # commented out to let tests pass
-        # not_reset_properly[key] = [value, "missing from no_reset_dict"]
-        missing_keys[key] = [value, "missing from no_reset_dict"]
-
-print("Missing keys:")
-for item in missing_keys.items():
-    print(item)
+        missing_keys[key] = value
 
 for key, value in end_reset_dict.items():
     # Get stats that weren't reset properly.
-    if (
-        value != "nan"
-        and float(value) != 0.0
-        and not is_match_key(key, exclude_from_check)
-        and not is_match_key(key, uncertain_exclude_from_check)
-    ):
+    if value != "nan" and float(value) != 0.0 and not is_excluded(key):
         not_reset_properly[key] = value
 
-print("Incorrectly reset stats:")
-for item in not_reset_properly.items():
-    print(item)
 
-if len(not_reset_properly) > 0:
-    print(f"{len(not_reset_properly)} stats did not reset properly!")
+def print_failed_stats(fail_dict: dict, message: str) -> None:
+    if fail_dict:
+        print(f"{len(fail_dict)} {message}")
+        for key in fail_dict:
+            print(key)
+
+
+print_failed_stats(not_reset_properly, "incorrectly reset stats:")
+print_failed_stats(
+    missing_keys, "stats in test stats.txt but not in reference stats.txt:"
+)
+
+if missing_keys or not_reset_properly:
     sys.exit(1)
