@@ -538,8 +538,8 @@ ISA::readMiscReg(RegIndex idx)
             // You can replace with the line below, however H-extension
             // is incomplete this way.
             // we only check misa to avoid unused var error
-            return misa.rvh ? mideleg_val : mideleg_val;
-            //return misa.rvh ? mideleg_val | HS_INTERRUPTS : mideleg_val;
+            // return misa.rvh ? mideleg_val : mideleg_val;
+            return misa.rvh ? mideleg_val | HS_INTERRUPTS : mideleg_val;
 
         }
       case MISCREG_SEPC:
