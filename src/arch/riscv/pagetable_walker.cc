@@ -370,7 +370,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                         fault = pageFault(true);
                     }
                     if (pte.n && (pte.ppn0 & mask(NapotShift)) != 8) {
-                            DPRINTF(Develop,
+                            DPRINTF(PageTableWalker,
                                 "SVNAPOT PTE has wrong encoding, \
                                  raising PF\n");
                             fault = pageFault(true);
