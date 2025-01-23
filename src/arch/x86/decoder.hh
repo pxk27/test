@@ -44,6 +44,7 @@
 #include "cpu/decode_cache.hh"
 #include "cpu/static_inst.hh"
 #include "debug/Decoder.hh"
+#include "debug/decode_LRU.hh"
 #include "params/X86Decoder.hh"
 
 namespace gem5
@@ -71,6 +72,9 @@ class Decoder : public InstDecoder
     static const ByteTable ImmediateTypeTwoByte;
     static const ByteTable ImmediateTypeThreeByte0F38;
     static const ByteTable ImmediateTypeThreeByte0F3A;
+
+    static const size_t MAX_ADDR_CACHE_SIZE = 100;
+    static const size_t MAX_INST_CACHE_SIZE = 100;
 
     X86ISAInst::MicrocodeRom microcodeRom;
 
@@ -238,12 +242,23 @@ class Decoder : public InstDecoder
 
     typedef decode_cache::AddrMap<Decoder::InstBytes> DecodePages;
     DecodePages *decodePages = nullptr;
-    typedef std::unordered_map<CacheKey, DecodePages *> AddrCacheMap;
+
+    //address cache LRU tracking
+    std::list<CacheKey> addrCacheList;
+    typedef std::unordered_map<
+            CacheKey,
+            std::pair<
+            DecodePages *,std::list<CacheKey>::iterator>> AddrCacheMap;
     AddrCacheMap addrCacheMap;
 
+    // Instruction cache LRU tracking
+    std::list<CacheKey> instCacheList;
     decode_cache::InstMap<ExtMachInst> *instMap = nullptr;
     typedef std::unordered_map<
-            CacheKey, decode_cache::InstMap<ExtMachInst> *> InstCacheMap;
+            CacheKey,
+            std::pair<
+            decode_cache::InstMap<ExtMachInst> *,
+            std::list<CacheKey>::iterator>> InstCacheMap;
     InstCacheMap instCacheMap;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
@@ -254,6 +269,66 @@ class Decoder : public InstDecoder
     StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
     void process();
+
+  private:
+    // Move the accessed entry in addrCacheMap tp the front of the list
+    void
+    touchAddrCache(AddrCacheMap::iterator it) {
+        // Move the element's iterator to the front of the list
+        addrCacheList.splice(
+            addrCacheList.begin(),
+            addrCacheList, it->second.second
+        );
+        // Update the iterator in the map
+        it->second.second = addrCacheList.begin();
+        DPRINTF(decode_LRU, "Touched addrCache entry: %lu\n", it->first);
+    }
+
+    void
+    touchInstCache(InstCacheMap::iterator it) {
+        // Move the element's iterator to the front of the list
+        instCacheList.splice(
+            instCacheList.begin(),
+            instCacheList, it->second.second
+        );
+        // Update the iterator in the map
+        it->second.second = instCacheList.begin();
+        DPRINTF(decode_LRU, "Touched instCache entry: %lu\n", it->first);
+    }
+
+    void
+    evictAddrCache() {
+        if (addrCacheList.size() > MAX_ADDR_CACHE_SIZE) {
+            // Get the key of the least recently used entry
+            auto lruKey = addrCacheList.back();
+            addrCacheList.pop_back(); // Remove the key from the list
+
+            // Get the entry from the map
+            auto it = addrCacheMap.find(lruKey);
+            if (it != addrCacheMap.end()) {
+                delete it->second.first;
+                addrCacheMap.erase(it);
+                DPRINTF(decode_LRU, "Evicted addrCache entry: %lu\n", lruKey);
+            }
+        }
+    }
+
+    void
+    evictInstCache() {
+        if (instCacheList.size() > MAX_INST_CACHE_SIZE) {
+            // Get the key of the least recently used entry
+            auto lruKey = instCacheList.back();
+            instCacheList.pop_back(); // Remove the key from the list
+
+            // Get the entry from the map
+            auto it = instCacheMap.find(lruKey);
+            if (it != instCacheMap.end()) {
+                delete it->second.first;
+                instCacheMap.erase(it);
+                DPRINTF(decode_LRU, "Evicted instCache entry: %lu\n", lruKey);
+            }
+        }
+    }
 
   public:
     Decoder(const X86DecoderParams &p) : InstDecoder(p, &fetchChunk)
@@ -281,18 +356,38 @@ class Decoder : public InstDecoder
 
         AddrCacheMap::iterator amIter = addrCacheMap.find(m5Reg);
         if (amIter != addrCacheMap.end()) {
-            decodePages = amIter->second;
+            touchAddrCache(amIter);
+            decodePages = amIter->second.first;
+            // Move the accessed entry to the front of the list
+            DPRINTF(decode_LRU, "Found addrCache entry: %lu\n", m5Reg);
         } else {
             decodePages = new DecodePages;
-            addrCacheMap[m5Reg] = decodePages;
+            addrCacheList.push_front(m5Reg);
+            addrCacheMap[m5Reg] = std::make_pair(
+                                    decodePages,
+                                    addrCacheList.begin()
+                                );
+
+            // Evict if necessary
+            evictAddrCache();
         }
 
         InstCacheMap::iterator imIter = instCacheMap.find(m5Reg);
         if (imIter != instCacheMap.end()) {
-            instMap = imIter->second;
+            touchInstCache(imIter);
+            instMap = imIter->second.first;
+            // Move the accessed entry to the front of the list
+            DPRINTF(decode_LRU, "Found instCache entry: %lu\n", m5Reg);
         } else {
             instMap = new decode_cache::InstMap<ExtMachInst>;
-            instCacheMap[m5Reg] = instMap;
+            instCacheList.push_front(m5Reg);
+            instCacheMap[m5Reg] = std::make_pair(
+                                    instMap,
+                                    instCacheList.begin()
+                                );
+
+            // Evict if necessary
+            evictInstCache();
         }
     }
 
