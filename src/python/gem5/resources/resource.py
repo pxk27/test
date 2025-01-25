@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import inspect
 import os
 from abc import ABCMeta
 from functools import partial
@@ -854,7 +855,7 @@ class WorkloadResource(AbstractResource):
         description: Optional[str] = None,
         source: Optional[str] = None,
         local_path: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = {},
+        parameters: Optional[dict] = {},
         **kwargs,
     ):
         """
@@ -962,6 +963,8 @@ def obtain_resource(
         gem5_version=gem5_version,
     )
 
+    # Partial function to get the path to download the resource to and the
+    # downloader function to use.
     to_path, downloader = _get_to_path_and_downloader_partial(
         resource_json=resource_json,
         to_path=to_path,
@@ -972,19 +975,37 @@ def obtain_resource(
         quiet=quiet,
     )
 
-    # Obtain the type from the JSON. From this we will determine what subclass
-    # of `AbstractResource` we are to create and return.
-    if "category" not in resource_json:
-        raise Exception(
-            f"Resource JSON for resource '{resource_id}' does not contain a "
-            "category field."
+    # The 'workload' and 'suite' are special and need some translating into
+    # the correct dictionary structure before we can create the object.
+    if resource_json.get("category") == "suite":
+        resource_json = _get_suite(
+            resource_json,
+            to_path,
+            resource_directory,
+            download_md5_mismatch,
+            clients,
+            gem5_version,
+            quiet,
         )
-    if resource_json["category"] not in _get_resource_json_type_map:
-        raise Exception(
-            f"Resource category '{resource_json['category']}'"
-            f"for {resource_json['id']} version {resource_json['resource_version']} not found.\n"
-            f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
+
+    if resource_json.get("category") == "workload":
+        resource_json = _get_workload(
+            resource_json,
+            to_path,
+            resource_directory,
+            download_md5_mismatch,
+            clients,
+            gem5_version,
+            quiet,
         )
+
+    # Check the schema of the 'resource_json' object.
+    _resources_schema_validator(resource_json)
+
+    # Sanity checks. These should have been caught by the schema validator.
+    assert "category" in resource_json
+    assert resource_json["category"] in _get_resource_json_type_map
+
     resources_category = resource_json["category"]
 
     if resources_category == "resource":
@@ -1002,41 +1023,136 @@ def obtain_resource(
             )
         return CustomResource(local_path=to_path, downloader=downloader)
 
-    assert resources_category in _get_resource_json_type_map, (
-        f"Resource category '{resources_category}' not found.\n"
-        f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
-    )
-    resource_class = _get_resource_json_type_map[resources_category]
-
-    if resources_category == "suite":
-        return _get_suite(
-            resource_json,
-            to_path,
-            resource_directory,
-            download_md5_mismatch,
-            clients,
-            gem5_version,
-            quiet,
-        )
-    if resources_category == "workload":
-        # This parses the "resources" and "additional_params" fields of the
-        # workload resource into a dictionary of AbstractResource objects and
-        # strings respectively.
-        return _get_workload(
-            resource_json,
-            to_path,
-            resource_directory,
-            download_md5_mismatch,
-            clients,
-            gem5_version,
-            quiet,
-        )
     # Once we know what AbstractResource subclass we are using, we create it.
     # The fields in the JSON object are assumed to map like-for-like to the
     # subclass contructor, so we can pass the resource_json map directly.
-    return resource_class(
+    return _get_resource_json_type_map[resources_category](
         local_path=to_path, downloader=downloader, **resource_json
     )
+
+
+def _resources_schema_validator(resource_json: Dict[str, Any]) -> None:
+    """
+    This function is used to validate the schema of the resource JSON object
+    before creating the resource object. This is to ensure that the resource
+    object is created with the correct parameters and types.
+    """
+
+    if "category" not in resource_json:
+        raise Exception(
+            f"Resource JSON parsed for resource '{resource_json.get('id', '<unknown>')}' does not "
+            "contain a category field."
+        )
+
+    assert "category" in resource_json
+    resources_category = resource_json["category"]
+
+    if not isinstance(resources_category, str):
+        raise Exception(
+            f"Resource category for {resource_json['id']} version "
+            f"{resource_json['resource_version']} is not a string."
+        )
+
+    if resources_category not in _get_resource_json_type_map:
+        raise Exception(
+            f"Resource category '{resources_category}' "
+            f"for {resource_json['id']} version "
+            f"{resource_json['resource_version']} not found.\n"
+            f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
+        )
+
+    assert resources_category in _get_resource_json_type_map
+    resource_class = _get_resource_json_type_map[resources_category]
+
+    # Get the constructor parameters for the resource class
+    params = inspect.signature(resource_class.__init__).parameters
+
+    # Check each parameter in resource_json exists in signature and has correct type
+    # Get set of valid parameter names from signature, excluding special cases
+    valid_param_names = {
+        name
+        for name in params.keys()
+        if name not in ("self", "to_path", "downloader", "kwargs")
+    }
+
+    # Check for unknown parameters in resource_json
+    for param_name in resource_json.keys():
+        if param_name not in valid_param_names:
+            warn(
+                f"Resource {resource_json['id']} version {resource_json['resource_version']} "
+                f"contains unexpected parameter '{param_name}' that is not used by {resources_category}. "
+                f"Valid parameters are: {', '.join(sorted(valid_param_names))}"
+            )
+
+    # Check required parameters exist, the parameters have the right types,
+    # and warn if a parameter is given but not used by this category of
+    # resource.
+    for param_name, param in params.items():
+        if param_name in ("self", "local_path", "downloader", "kwargs"):
+            continue
+
+        if (
+            param_name not in resource_json
+            and param.default == inspect.Parameter.empty
+        ):
+            # Required parameter missing
+            raise Exception(
+                f"Resource {resource_json['id']} version {resource_json['resource_version']} "
+                f"is missing required parameter '{param_name}' for {resources_category}"
+            )
+
+        # Skip type checking if parameter not provided and optional
+        if param_name not in resource_json:
+            continue
+
+        # Get the expected type annotation
+        param_type = param.annotation
+        if param_type == inspect.Parameter.empty:
+            continue  # Skip type checking if no type annotation
+
+        # Handle Union and Optional types
+        if getattr(param_type, "__origin__", None) == Union:
+            # Get all possible types from the Union using get_args, excluding None for Optional
+            from typing import get_args
+
+            valid_types = tuple(
+                t for t in get_args(param_type) if t != type(None)
+            )
+
+            # For Union types, we need to check if the value matches any of the valid types
+            value = resource_json[param_name]
+            # For Optional types, None is always valid
+            if value is None and type(None) in get_args(param_type):
+                continue
+            if not any(
+                isinstance(value, t)
+                for t in valid_types
+                if not hasattr(t, "__origin__")
+            ):
+                type_names = " or ".join(
+                    t.__name__
+                    for t in valid_types
+                    if not hasattr(t, "__origin__")
+                )
+                raise Exception(
+                    f"Resource {resource_json['id']} version {resource_json['resource_version']} "
+                    f"parameter '{param_name}' has incorrect type. "
+                    f"Expected {type_names}, got {type(value).__name__}"
+                )
+        else:
+            # Non-Union type checking
+            value = resource_json[param_name]
+            # Check if param_type is a typing generic (List, Dict, Set, etc)
+            if hasattr(param_type, "__origin__"):
+                # Skip validation for generic types as they can't be checked with isinstance
+                continue
+            else:
+                if not isinstance(value, param_type):
+                    raise Exception(
+                        f"Resource {resource_json['id']} version {resource_json['resource_version']} "
+                        f"parameter '{param_name}' has incorrect type. "
+                        f"Expected {param_type.__name__}, got {type(value).__name__}"
+                    )
 
 
 def _get_suite(
@@ -1047,7 +1163,7 @@ def _get_suite(
     clients: List[str],
     gem5_version: str,
     quiet: bool,
-) -> SuiteResource:
+) -> Dict[str, Any]:
     """
     :param suite: The suite JSON object.
     :param local_path: The local path of the suite.
@@ -1097,24 +1213,25 @@ def _get_suite(
     # and setting the input group for each workload
     workload_input_group_dict = {}
     for workload in workload_json:
+        workload_dict = _get_workload(
+            workload,
+            local_path,
+            resource_directory,
+            download_md5_mismatch,
+            clients,
+            gem5_version,
+            quiet,
+        )
+        _resources_schema_validator(workload_dict)
         workload_input_group_dict[
-            _get_workload(
-                workload,
-                local_path,
-                resource_directory,
-                download_md5_mismatch,
-                clients,
-                gem5_version,
-                quiet,
+            WorkloadResource(
+                local_path=local_path, downloader=None, **workload_dict
             )
         ] = id_input_group_dict[workload["id"]]
 
     suite["workloads"] = workload_input_group_dict
-    return SuiteResource(
-        local_path=local_path,
-        downloader=None,
-        **suite,
-    )
+
+    return suite
 
 
 def _get_workload(
@@ -1125,7 +1242,7 @@ def _get_workload(
     clients: List[str],
     gem5_version: str,
     quiet: bool,
-) -> WorkloadResource:
+) -> Dict[str, Any]:
     """
     :param workload: The workload JSON object.
     :param local_path: The local path of the workload.
@@ -1141,7 +1258,6 @@ def _get_workload(
                          version.
     :param quiet: If ``True``, suppress output. ``False`` by default.
     """
-    params = {}
 
     db_query = []
 
@@ -1152,9 +1268,13 @@ def _get_workload(
 
     if not isinstance(workload["resources"], dict):
         raise Exception(
-            f"Workload {workload['id']} version {workload['resource_version']} contains a 'resources' field that is not a dictionary."
-            "The 'resources' field should be a dictionary mapping resource category to resource ID and version."
+            f"Workload {workload['id']} version {workload['resource_version']} contains a 'resources' field of the wrong type."
+            "The 'resources' field should be a dictionary mapping parameter name (str) to another Dictionary of the resources resource ID (str) and version (src).\n"
+            "e.g., \"{'disk_image': {'id': 'disk_image_id', 'resource_version': '1.0.0'}}\"'"
         )
+
+    if "parameters" not in workload:
+        workload["parameters"] = {}
 
     for resource in workload["resources"].values():
         db_query.append(
@@ -1183,7 +1303,6 @@ def _get_workload(
             raise Exception(
                 f"Resource {param_resource['id']} with version {param_resource['resource_version']} not found"
             )
-        assert isinstance(param_name, str)
         to_path, downloader = _get_to_path_and_downloader_partial(
             resource_json=resource_match,
             to_path=local_path,
@@ -1194,45 +1313,49 @@ def _get_workload(
             quiet=quiet,
         )
 
-        if "category" not in resource_match:
-            raise Exception(
-                f"Resource JSON for resource '{resource_match['id']}' does not contain a "
-                "category field."
-            )
-        if resource_match["category"] not in _get_resource_json_type_map:
-            raise Exception(
-                f"Resource category '{resource_match['category']}'"
-                f"for {resource_match['id']} version {resource_match['resource_version']} not found.\n"
-                f"Valid categories are {', '.join(_get_resource_json_type_map.keys())}."
-            )
+        _resources_schema_validator(resource_match)
+
+        # Sanity checks. These should have been caught by the schema validator.
+        assert "category" in resource_match
+        assert isinstance(resource_match["category"], str)
+        assert resource_match["category"] in _get_resource_json_type_map
 
         resource_class = _get_resource_json_type_map[
             resource_match["category"]
         ]
 
-        params[param_name] = resource_class(
+        workload["parameters"][param_name] = resource_class(
             local_path=to_path,
             downloader=downloader,
-            **resource,
+            **resource_match,
         )
 
-        # Adding the additional parameters to the workload parameters
-        if (
-            "additional_params" in workload.keys()
-            and workload["additional_params"]
-        ):
-            assert isinstance(workload["additional_params"], dict)
-            for key in workload["additional_params"].keys():
-                assert isinstance(key, str)
-                value = workload["additional_params"][key]
-                params[key] = value
+    del workload["resources"]
 
-    return WorkloadResource(
-        local_path=local_path,
-        downloader=None,
-        parameters=params,
-        **workload,
-    )
+    # Adding the additional parameters to the workload parameters
+    if (
+        "additional_params" in workload.keys()
+        and workload["additional_params"]
+    ):
+        assert isinstance(workload["additional_params"], dict)
+        for key in workload["additional_params"].keys():
+            assert isinstance(key, str)
+            value = workload["additional_params"][key]
+            workload["parameters"][key] = value
+
+        del workload["additional_params"]
+
+    # Run the validator to make sure the workload JSON is correct
+    _resources_schema_validator(workload)
+
+    # By this point the workload dictionary should have merged the "resources"
+    # and "additional_params" fields into the "parameters" field.
+    assert "parameters" in workload
+    assert "resources" not in workload
+    assert "additional_params" not in workload
+
+    # Return the workload dictionary.
+    return workload
 
 
 def _get_to_path_and_downloader_partial(

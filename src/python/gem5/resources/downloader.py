@@ -41,6 +41,8 @@ from typing import (
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
+from m5.util import warn
+
 from _m5 import core
 
 from ..utils.filelock import FileLock
@@ -261,20 +263,26 @@ def get_resource(
             else:
                 md5 = md5_dir(Path(to_path))
 
-            if "md5sum" not in resource_json:
-                raise Exception(
-                    f"The resource '{resource_json['id']}' and "
-                    f"'{resource_json['resource_version']}' does not contain an md5sum"
-                )
-            if md5 == resource_json["md5sum"]:
+            if md5 == resource_json.get("md5sum"):
                 # In this case, the file has already been download, no need to
                 # do so again.
                 return
-            elif download_md5_mismatch:
+            elif download_md5_mismatch or "md5sum" not in resource_json:
+                # In the case the the md5sum is not present in the resource
+                # JSON/dict or the ,md5sum is present but does not match that
+                # of the local file, the local file will be deleted and the
+                # resource will be downloaded again.
                 if os.path.isfile(to_path):
                     os.remove(to_path)
                 else:
                     shutil.rmtree(to_path)
+                if "m5sum" not in resource_json:
+                    warn(
+                        f"The 'md5sum' field of {resource_name}, version "
+                        f"{resource_version} is not present or set. This is "
+                        "not recommended as it forces a re-download of the "
+                        "resource on every call to get_resource."
+                    )
             else:
                 raise Exception(
                     "There already a file present at '{}' but "
