@@ -47,9 +47,12 @@ class RiscvMMU(BaseMMU):
     cxx_class = "gem5::RiscvISA::MMU"
     cxx_header = "arch/riscv/mmu.hh"
 
-    l2_shared = RiscvTLB(entry_type="unified", size=1024)
-    itb = RiscvTLB(entry_type="instruction", next_level=l2_shared)
-    dtb = RiscvTLB(entry_type="data", next_level=l2_shared)
+    # Optionally, you can add an L2 TLB using the following line:
+    #   `l2_shared = RiscvTLB(entry_type="unified", size=1024)`
+    # Ensure to pass `next_level=l2_shared` to both the I-TLB and D-TLB
+    # so the L2 TLB can handle their requests.
+    itb = RiscvTLB(entry_type="instruction")
+    dtb = RiscvTLB(entry_type="data")
     pma_checker = Param.BasePMAChecker(PMAChecker(), "PMA Checker")
     pmp = Param.PMP(PMP(), "Physical Memory Protection Unit")
 
