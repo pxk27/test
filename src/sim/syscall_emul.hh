@@ -347,6 +347,10 @@ SyscallReturn getcpuFunc(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,
                               int tgt_fd, VPtr<> addrPtr, VPtr<> lenPtr);
 
+// Target sched_getparam() handler.
+SyscallReturn sched_getparamFunc(SyscallDesc *desc, ThreadContext *tc,
+                                 int pid, VPtr<int> paramPtr);
+
 template <class OS>
 SyscallReturn
 atSyscallPath(ThreadContext *tc, int dirfd, std::string &path)
@@ -803,7 +807,7 @@ ioctlFunc(SyscallDesc *desc, ThreadContext *tc,
      * For lack of a better return code, return ENOTTY. Ideally, we should
      * return something better here, but at least we issue the warning.
      */
-    warn("Unsupported ioctl call (return ENOTTY): ioctl(%d, 0x%x, ...) @ \n",
+    warn("Unsupported ioctl call (return ENOTTY): ioctl(%d, 0x%x, ...) @ %s\n",
          tgt_fd, req, tc->pcState());
     return -ENOTTY;
 }
@@ -3218,11 +3222,12 @@ getrandomFunc(SyscallDesc *desc, ThreadContext *tc,
               VPtr<> buf_ptr, typename OS::size_t count,
               unsigned int flags)
 {
+    static Random::RandomPtr se_prng = Random::genRandom();
     SETranslatingPortProxy proxy(tc);
 
     TypedBufferArg<uint8_t> buf(buf_ptr, count);
     for (int i = 0; i < count; ++i) {
-        buf[i] = gem5::random_mt.random<uint8_t>();
+        buf[i] = se_prng->random<uint8_t>();
     }
     buf.copyOut(proxy);
 

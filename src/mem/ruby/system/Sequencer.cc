@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 ARM Limited
+ * Copyright (c) 2019-2021,2023 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -959,24 +959,25 @@ Sequencer::makeRequest(PacketPtr pkt)
         //
         // The following logic works correctly with the semantics
         // of armV8 LDEX/STEX instructions.
+        const ProtocolInfo &protocol_info = m_ruby_system->getProtocolInfo();
 
         if (pkt->isWrite()) {
             DPRINTF(RubySequencer, "Issuing SC\n");
             primary_type = RubyRequestType_Store_Conditional;
-#if defined (PROTOCOL_MESI_Three_Level) || defined (PROTOCOL_MESI_Three_Level_HTM)
-            secondary_type = RubyRequestType_Store_Conditional;
-#else
-            secondary_type = RubyRequestType_ST;
-#endif
+            if (protocol_info.getUseSecondaryStoreConditional()) {
+                secondary_type = RubyRequestType_Store_Conditional;
+            } else {
+                secondary_type = RubyRequestType_ST;
+            }
         } else {
             DPRINTF(RubySequencer, "Issuing LL\n");
             assert(pkt->isRead());
             primary_type = RubyRequestType_Load_Linked;
-#if defined (PROTOCOL_MESI_Two_Level) || defined (PROTOCOL_MESI_Three_Level)
-            secondary_type = RubyRequestType_Load_Linked;
-#else
-            secondary_type = RubyRequestType_LD;
-#endif
+            if (protocol_info.getUseSecondaryLoadLinked()) {
+                secondary_type = RubyRequestType_Load_Linked;
+            } else {
+                secondary_type = RubyRequestType_LD;
+            }
         }
     } else if (pkt->req->isLockedRMW()) {
         //
@@ -1045,7 +1046,8 @@ Sequencer::makeRequest(PacketPtr pkt)
             m_cache_inv_pkt = pkt;
             invL1();
         } else {
-            panic("Unsupported ruby packet type\n");
+            panic("Cannot convert packet [%s] to ruby request\n",
+                  pkt->print());
         }
     }
 

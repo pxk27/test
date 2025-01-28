@@ -257,7 +257,14 @@ get_cpu_online_mask(ThreadContext *tc)
     RiscvLinux::cpumask_t *cpu_online_mask = cpumask_malloc(tc);
     if (cpu_online_mask != nullptr) {
         for (int i = 0; i < tc->getSystemPtr()->threads.size(); i++) {
-            CPU_SET(i, (cpu_set_t *)&cpu_online_mask->bits);
+            #ifdef __linux__
+                        CPU_SET(i, (cpu_set_t *)&cpu_online_mask->bits);
+            #else
+                        // For non-Linux systems, we use cpumask_set_cpu.
+                        // CPU_SET is a macro that is not available on all
+                        // non-Linux systems.
+                        cpumask_set_cpu(i, cpu_online_mask);
+            #endif
         }
     }
 
@@ -643,7 +650,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 118,  "sched_setparam" },
     { 119,  "sched_setscheduler" },
     { 120,  "sched_getscheduler" },
-    { 121,  "sched_getparam" },
+    { 121,  "sched_getparam", sched_getparamFunc },
     { 122,  "sched_setaffinity" },
     { 123,  "sched_getaffinity", schedGetaffinityFunc<RiscvLinux64> },
     { 124,  "sched_yield", ignoreWarnOnceFunc },
@@ -1010,7 +1017,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     { 118,  "sched_setparam" },
     { 119,  "sched_setscheduler" },
     { 120,  "sched_getscheduler" },
-    { 121,  "sched_getparam" },
+    { 121,  "sched_getparam", sched_getparamFunc },
     { 122,  "sched_setaffinity" },
     { 123,  "sched_getaffinity", schedGetaffinityFunc<RiscvLinux32> },
     { 124,  "sched_yield", ignoreWarnOnceFunc },

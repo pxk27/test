@@ -185,6 +185,7 @@ namespace RiscvISA
     [MISCREG_SCAUSE]        = "SCAUSE",
     [MISCREG_STVAL]         = "STVAL",
     [MISCREG_SATP]          = "SATP",
+    [MISCREG_SENVCFG]       = "SENVCFG",
 
     [MISCREG_UTVEC]         = "UTVEC",
     [MISCREG_USCRATCH]      = "USCRATCH",
@@ -205,6 +206,10 @@ namespace RiscvISA
     [MISCREG_NMIVEC]        = "NMIVEC",
     [MISCREG_NMIE]          = "NMIE",
     [MISCREG_NMIP]          = "NMIP",
+    [MISCREG_MNSCRATCH]     = "MNSCRATCH",
+    [MISCREG_MNEPC]         = "MNEPC",
+    [MISCREG_MNCAUSE]       = "MNCAUSE",
+    [MISCREG_MNSTATUS]      = "MNSTATUS",
 
     // following are rv32 only registers
     [MISCREG_MSTATUSH]      = "MSTATUSH",
@@ -260,7 +265,8 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
     _rvType(p.riscv_type), enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
     _privilegeModeSet(p.privilege_mode_set),
-    _wfiResumeOnPending(p.wfi_resume_on_pending), _enableZcd(p.enable_Zcd)
+    _wfiResumeOnPending(p.wfi_resume_on_pending), _enableZcd(p.enable_Zcd),
+    _enableSmrnmi(p.enable_Smrnmi)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -375,8 +381,7 @@ void ISA::clear()
     // don't set it to zero; software may try to determine the supported
     // triggers, starting at zero. simply set a different value here.
     miscRegFile[MISCREG_TSELECT] = 1;
-    // NMI is always enabled.
-    miscRegFile[MISCREG_NMIE] = 1;
+    miscRegFile[MISCREG_NMIE] = enableSmrnmi() ? 0 : 1;
 }
 
 bool
@@ -599,6 +604,29 @@ ISA::readMiscReg(RegIndex idx)
                   (readMiscRegNoEffect(MISCREG_VXRM) << 1);
         }
         break;
+      case MISCREG_MNSTATUS:
+        {
+            NSTATUS nstatus = readMiscRegNoEffect(idx);
+            nstatus.nmie = readMiscRegNoEffect(MISCREG_NMIE);
+            // Check nstatus.mnpp
+            MISA misa = readMiscRegNoEffect(MISCREG_ISA);
+            switch(nstatus.mnpp) {
+                case PRV_U:
+                    nstatus.mnpp = (misa.rvu) ? PRV_U : PRV_M;
+                    break;
+                case PRV_S:
+                    if (misa.rvs)
+                        nstatus.mnpp = PRV_S;
+                    else
+                        nstatus.mnpp = (misa.rvu) ? PRV_U : PRV_M;
+                    break;
+                case PRV_M:
+                    break;
+                default:
+                    nstatus.mnpp = (misa.rvu) ? PRV_U : PRV_M;
+            }
+            return nstatus;
+        }
       case MISCREG_FFLAGS_EXE:
         {
             return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
@@ -779,6 +807,26 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 setMiscRegNoEffect(idx, new_val);
             }
             break;
+          case MISCREG_SENVCFG:
+            {
+                // panic on write to bitfields that aren't implemented in gem5
+                SENVCFG panic_mask = 0;
+                panic_mask.pmm = 3;
+
+                SENVCFG wpri_mask = 0;
+                wpri_mask.wpri_1 = ~wpri_mask.wpri_1;
+                wpri_mask.wpri_2 = ~wpri_mask.wpri_2;
+                wpri_mask.wpri_3 = ~wpri_mask.wpri_3;
+
+                if ((panic_mask & val) != 0) {
+                    panic("Tried to write to an unimplemented bitfield in the "
+                    "senvcfg CSR!\nThe attempted write was:\n %" PRIu64 "\n",
+                    val);
+                }
+
+                setMiscRegNoEffect(idx, val & ~wpri_mask);
+            }
+            break;
           case MISCREG_TSELECT:
             {
                 // we don't support debugging, so always set a different value
@@ -875,6 +923,14 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             {
                 setMiscRegNoEffect(MISCREG_FFLAGS, bits(val, 4, 0));
                 setMiscRegNoEffect(MISCREG_FRM, bits(val, 7, 5));
+            }
+            break;
+          case MISCREG_MNSTATUS:
+            {
+                NSTATUS nstatus = val;
+                setMiscRegNoEffect(MISCREG_NMIE,
+                    (RegVal)nstatus.nmie | readMiscRegNoEffect(MISCREG_NMIE));
+                setMiscRegNoEffect(idx, val);
             }
             break;
           default:

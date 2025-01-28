@@ -183,6 +183,7 @@ enum MiscRegIndex
     MISCREG_SCAUSE,
     MISCREG_STVAL,
     MISCREG_SATP,
+    MISCREG_SENVCFG,
 
     MISCREG_UTVEC,
     MISCREG_USCRATCH,
@@ -209,6 +210,12 @@ enum MiscRegIndex
     MISCREG_NMIE,
     // non-maskable-interrupt-pending: NMI version of xIP
     MISCREG_NMIP,
+
+    // Resumable Non-Maskable Interrupts
+    MISCREG_MNSCRATCH,
+    MISCREG_MNEPC,
+    MISCREG_MNCAUSE,
+    MISCREG_MNSTATUS,
 
     // the following MicsRegIndex are RV32 only
     MISCREG_MSTATUSH,
@@ -360,6 +367,7 @@ enum CSRIndex
     CSR_STVAL = 0x143,
     CSR_SIP = 0x144,
     CSR_SATP = 0x180,
+    CSR_SENVCFG = 0x10A, // 20240411 RISCV spec, volume 2
 
     CSR_MVENDORID = 0xF11,
     CSR_MARCHID = 0xF12,
@@ -508,7 +516,12 @@ enum CSRIndex
     CSR_VCSR         = 0x00F,
     CSR_VL           = 0xC20,
     CSR_VTYPE        = 0xC21,
-    CSR_VLENB        = 0xC22
+    CSR_VLENB        = 0xC22,
+
+    CSR_MNSCRATCH    = 0x740,
+    CSR_MNEPC        = 0x741,
+    CSR_MNCAUSE      = 0x742,
+    CSR_MNSTATUS     = 0x744,
 };
 
 struct CSRMetadata
@@ -517,6 +530,7 @@ struct CSRMetadata
     const int physIndex;
     const uint64_t rvTypes;
     const uint64_t isaExts;
+    const bool requireSmrnmi = false;
 };
 
 template <typename... T>
@@ -777,6 +791,9 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
         {"sip", MISCREG_SIP, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
     {CSR_SATP,
         {"satp", MISCREG_SATP, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
+    {CSR_SENVCFG,
+        {"senvcfg", MISCREG_SENVCFG, rvTypeFlags(RV64, RV32),
+         isaExtsFlags('s')}},
 
     {CSR_MVENDORID,
         {"mvendorid", MISCREG_VENDORID, rvTypeFlags(RV64, RV32),
@@ -1176,7 +1193,20 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_VTYPE,
         {"vtype", MISCREG_VTYPE, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}},
     {CSR_VLENB,
-        {"VLENB", MISCREG_VLENB, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}}
+        {"VLENB", MISCREG_VLENB, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}},
+
+    {CSR_MNSCRATCH,
+        {"mnscratch", MISCREG_MNSCRATCH, rvTypeFlags(RV64, RV32),
+         isaExtsFlags(), true}},
+    {CSR_MNEPC,
+        {"mnepc", MISCREG_MNEPC, rvTypeFlags(RV64, RV32), isaExtsFlags(),
+         true}},
+    {CSR_MNCAUSE,
+        {"mncause", MISCREG_MNCAUSE, rvTypeFlags(RV64, RV32), isaExtsFlags(),
+         true}},
+    {CSR_MNSTATUS,
+        {"mnstatus", MISCREG_MNSTATUS, rvTypeFlags(RV64, RV32),
+         isaExtsFlags(), true}}
 };
 
 /**
@@ -1209,6 +1239,17 @@ BitUnion64(STATUS)
     Bitfield<1> sie;
     Bitfield<0> uie;
 EndBitUnion(STATUS)
+
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual.
+ * Resumable Non-Maskable Interrupts. The main register that
+ * uses these fields is the MNSTATUS register
+ */
+BitUnion64(NSTATUS)
+    Bitfield<12, 11> mnpp;
+    Bitfield<7> mnv;
+    Bitfield<3> nmie;
+EndBitUnion(NSTATUS)
 
 /**
  * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
@@ -1259,6 +1300,20 @@ BitUnion64(INTERRUPT)
     Bitfield<1> ssi;
     Bitfield<0> usi;
 EndBitUnion(INTERRUPT)
+
+
+// From the RISCV specification version 20240411, volume 2,
+// section 10.1.10, page 98
+BitUnion64(SENVCFG)
+    Bitfield<63,34> wpri_1;
+    Bitfield<33,32> pmm;
+    Bitfield<31,8> wpri_2;
+    Bitfield<7> cbze;
+    Bitfield<6> cbcfe;
+    Bitfield<5,4> cbie;
+    Bitfield<3,1> wpri_3;
+    Bitfield<0> fiom;
+EndBitUnion(SENVCFG)
 
 const off_t MXL_OFFSETS[enums::Num_RiscvType] = {
     [RV32] = (sizeof(uint32_t) * 8 - 2),
