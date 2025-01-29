@@ -1333,17 +1333,17 @@ def _get_workload(
     del workload["resources"]
 
     # Adding the additional parameters to the workload parameters
-    if (
-        "additional_params" in workload.keys()
-        and workload["additional_params"]
-    ):
-        assert isinstance(workload["additional_params"], dict)
-        for key in workload["additional_params"].keys():
-            assert isinstance(key, str)
-            value = workload["additional_params"][key]
-            workload["parameters"][key] = value
+    if "additional_params" in workload.keys():
+        if workload["additional_params"]:
+            assert isinstance(workload["additional_params"], dict)
+            for key in workload["additional_params"].keys():
+                assert isinstance(key, str)
+                value = workload["additional_params"][key]
+                workload["parameters"][key] = value
 
-        del workload["additional_params"]
+            del workload["additional_params"]
+        else:
+            workload.pop("additional_params", None)
 
     # Run the validator to make sure the workload JSON is correct
     _resources_schema_validator(workload)
