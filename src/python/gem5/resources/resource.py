@@ -1335,7 +1335,9 @@ def _get_workload(
     # Adding the additional parameters to the workload parameters
     if "additional_params" in workload.keys():
         if workload["additional_params"]:
-            assert isinstance(workload["additional_params"], dict)
+            assert isinstance(
+                workload["additional_params"], dict
+            ), f"Additional params should be a dict, not {type(workload["additional_params"])}"
             for key in workload["additional_params"].keys():
                 assert isinstance(key, str)
                 value = workload["additional_params"][key]
