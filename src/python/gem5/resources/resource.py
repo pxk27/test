@@ -1320,7 +1320,7 @@ def _get_workload(
         if workload["additional_params"]:
             assert isinstance(
                 workload["additional_params"], dict
-            ), f"Additional params should be a dict, not {type(workload["additional_params"])}"
+            ), f"Additional params should be a dict, not {type(workload['additional_params'])}"
             for key in workload["additional_params"].keys():
                 assert isinstance(key, str)
                 value = workload["additional_params"][key]

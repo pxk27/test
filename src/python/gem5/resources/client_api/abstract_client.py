@@ -106,19 +106,19 @@ class AbstractClient(ABC):
             # check if resource_version exists as a key
             if "resource_version" not in resource:
                 raise Exception(
-                    f"Resource version is not provided for resource '{resource["id"]}'."
+                    f"Resource version is not provided for resource '{resource['id']}'."
                 )
             # check if resource_version follows the correct format of "x.y.z"
             if resource["resource_version"] is not None:
                 if not isinstance(resource["resource_version"], str):
                     raise Exception(
-                        f"Resource version '{resource["resource_version"]}' is not a string."
+                        f"Resource version '{resource['resource_version']}' is not a string."
                     )
                 if not re.match(
                     r"^\d+\.\d+\.\d+$", resource["resource_version"]
                 ):
                     raise Exception(
-                        f"Resource version '{resource["resource_version"]}' does not follow the correct format of 'x.y.z'."
+                        f"Resource version '{resource['resource_version']}' does not follow the correct format of 'x.y.z'."
                     )
 
             to_return = (resource["id"].lower(),)
