@@ -1067,23 +1067,6 @@ def _resources_schema_validator(resource_json: Dict[str, Any]) -> None:
     # Get the constructor parameters for the resource class
     params = inspect.signature(resource_class.__init__).parameters
 
-    # Check each parameter in resource_json exists in signature and has correct type
-    # Get set of valid parameter names from signature, excluding special cases
-    valid_param_names = {
-        name
-        for name in params.keys()
-        if name not in ("self", "to_path", "downloader", "kwargs")
-    }
-
-    # Check for unknown parameters in resource_json
-    for param_name in resource_json.keys():
-        if param_name not in valid_param_names:
-            warn(
-                f"Resource {resource_json['id']} version {resource_json['resource_version']} "
-                f"contains unexpected parameter '{param_name}' that is not used by {resources_category}. "
-                f"Valid parameters are: {', '.join(sorted(valid_param_names))}"
-            )
-
     # Check required parameters exist, the parameters have the right types,
     # and warn if a parameter is given but not used by this category of
     # resource.
