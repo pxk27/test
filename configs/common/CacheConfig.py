@@ -127,20 +127,19 @@ def config_cache(options, system):
     if options.l2cache and options.elastic_trace_en:
         fatal("When elastic trace is enabled, do not configure L2 caches.")
 
-
     if options.l3cache:
 
         system.l3 = L3Cache(
             clk_domain=system.cpu_clk_domain, **_get_cache_opts("l3", options)
-            )
+        )
 
         system.tollcbus = L2XBar(clk_domain=system.cpu_clk_domain)
         system.l3.cpu_side = system.tollcbus.mem_side_ports
         system.l3.mem_side = system.membus.cpu_side_ports
 
-        #If there is no L3, connect L2 to membus directly
-        #else:
-            #system.l2.mem_side = system.membus.cpu_side_ports
+        # If there is no L3, connect L2 to membus directly
+        # else:
+        # system.l2.mem_side = system.membus.cpu_side_ports
 
     if options.memchecker:
         system.memchecker = MemChecker()
@@ -179,8 +178,9 @@ def config_cache(options, system):
 
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
-            system.cpu[i].addTwoLevelCacheHierarchy(icache, dcache, l2cache, iwalkcache, dwalkcache)
-
+            system.cpu[i].addTwoLevelCacheHierarchy(
+                icache, dcache, l2cache, iwalkcache, dwalkcache
+            )
 
             if options.memchecker:
                 # The mem_side ports of the caches haven't been connected yet.
