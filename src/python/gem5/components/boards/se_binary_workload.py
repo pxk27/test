@@ -63,20 +63,22 @@ class SEBinaryWorkload:
 
     .. note::
 
-        At present this implementation is limited. A single
-        process is added to all cores as the workload. Therefore, despite allowing
-        for multi-core setups, multi-program workloads are not presently supported.
+        At present this implementation is limited. Although multi-program workloads are supported,
+        recommend to mix only single-thread program. Mixing multi-thread program is unstable and
+        may produce unintended behaviors
+
+        Moreover, using multi-program workloads, match the number of cores and workloads
     """
 
     def set_se_binary_workload(
         self,
-        binary: BinaryResource,
+        binary: Union[BinaryResource, List[BinaryResource]],
         exit_on_work_items: bool = True,
         stdin_file: Optional[FileResource] = None,
         stdout_file: Optional[Path] = None,
         stderr_file: Optional[Path] = None,
         env_list: Optional[List[str]] = None,
-        arguments: List[str] = [],
+        arguments: Union[List[str], List[List[str]]] = None,
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
     ) -> None:
         """Set up the system to run a specific binary.
@@ -109,12 +111,25 @@ class SEBinaryWorkload:
         # SE-mode simulation.
         self._set_fullsystem(False)
 
-        binary_path = binary.get_local_path()
-        self.workload = SEWorkload.init_compatible(binary_path)
+        workloads = None
+        if not isinstance(binary, list):
+            # run single-program
+            workloads = [binary]
+            arguments = [arguments]
+        else:
+            workloads = binary
 
-        process = Process()
-        process.executable = binary_path
-        process.cmd = [binary_path] + arguments
+        multiprocesses = []
+        for i, binary in enumerate(workloads):
+            process = Process(pid=100 + i)
+            binary_path = binary.get_local_path()
+            process.executable = binary_path
+            process.cmd = [binary_path] + arguments[i]
+            multiprocesses.append(process)
+        self.workload = SEWorkload.init_compatible(
+            workloads[0].get_local_path()
+        )
+
         if stdin_file is not None:
             process.input = stdin_file.get_local_path()
         if stdout_file is not None:
@@ -130,7 +145,7 @@ class SEBinaryWorkload:
             # Running KVM in SE mode requires special flags to be set for the
             # process.
             self.m5ops_base = max(0xFFFF0000, self.get_memory().get_size())
-            process.kvmInSE = True
+            processa.kvmInSE = True
             process.useArchPT = True
 
         if isinstance(self.get_processor(), SwitchableProcessor):
@@ -145,11 +160,17 @@ class SEBinaryWorkload:
             #
             # A better API for this which avoids `isinstance` checks would be
             # welcome.
-            for core in self.get_processor()._all_cores():
-                core.set_workload(process)
+            for i, core in enumerate(self.get_processor()._all_cores()):
+                if len(multiprocesses) == 1:
+                    core.set_workload(multiprocesses[0])
+                else:
+                    core.set_workload(multiprocesses[i])
         else:
-            for core in self.get_processor().get_cores():
-                core.set_workload(process)
+            for i, core in enumerate(self.get_processor().get_cores()):
+                if len(multiprocesses) == 1:
+                    core.set_workload(multiprocesses[0])
+                else:
+                    core.set_workload(multiprocesses[i])
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
