@@ -276,13 +276,61 @@ def get_resource(
                     os.remove(to_path)
                 else:
                     shutil.rmtree(to_path)
-                if "m5sum" not in resource_json:
+                if "md5sum" not in resource_json:
                     warn(
                         f"The 'md5sum' field of {resource_name}, version "
                         f"{resource_version} is not present or set. This is "
                         "not recommended as it forces a re-download of the "
                         "resource on every call to get_resource."
                     )
+                # if the md5sum of the local resource != the md5sum in the
+                # retrieved JSON
+                elif md5 != resource_json.get("md5sum"):
+                    most_recent_resource_version = get_resource_json_obj(
+                        resource_name,
+                        resource_version=None,
+                        clients=clients,
+                        gem5_version=gem5_version,
+                    )["resource_version"]
+
+                    # Check if the local version of requested resource is
+                    # different from the requested version
+                    int_most_recent_resource_version = int(
+                        most_recent_resource_version.split(".")[0]
+                    )
+                    version_mismatch = False
+                    # iterate through jsons of the requested resource by
+                    # version, starting from 1.0.0 to the latest version,
+                    # and try to match md5sums to determine local version.
+                    for i in range(1, int_most_recent_resource_version + 1):
+                        temp_resource_version = f"{i}.0.0"
+                        temp_resource_json = get_resource_json_obj(
+                            resource_name,
+                            resource_version=temp_resource_version,
+                            clients=clients,
+                            gem5_version=gem5_version,
+                        )
+                        # If we match the md5sum of the local resource, and the
+                        # resource version to get != the local resource version
+                        if (
+                            temp_resource_json.get("md5sum") == md5
+                            and resource_version != temp_resource_version
+                        ):
+                            warn(
+                                f"Redownloading {resource_name} to get "
+                                f"version {resource_version}. The local "
+                                f"version of the resource is currently "
+                                f"{temp_resource_version}."
+                            )
+                            version_mismatch = True
+                            break
+                    if not version_mismatch:
+                        warn(
+                            "There is a mismatch between the md5sum of the "
+                            f"local and remote copies of {resource_name}, "
+                            f"version {resource_version}. Redownloading..."
+                        )
+
             else:
                 raise Exception(
                     "There already a file present at '{}' but "
