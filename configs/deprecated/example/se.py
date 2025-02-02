@@ -186,12 +186,16 @@ if args.smt and args.num_cpus > 1:
 np = args.num_cpus
 mp0_path = multiprocesses[0].executable
 system = System(
-    cpu=[CPUClass(cpu_id=i) for i in range(np)],
-    mem_mode=test_mem_mode,
-    mem_ranges=[AddrRange(args.mem_size)],
-    cache_line_size=args.cacheline_size,
+    cpu=[TimingSimpleCPU(cpu_id=i) for i in range(args.num_cpus)],  # 5-stage pipeline CPU
+    mem_mode="timing",  
+    mem_ranges=[AddrRange('512MB')],  
+    cache_line_size=64,  
 )
 
+m5.instantiate()  # Instantiate the simulation
+print("Starting simulation with a 5-stage pipeline CPU...")
+
+)
 if numThreads > 1:
     system.multi_thread = True
 
