@@ -187,9 +187,9 @@ np = args.num_cpus
 mp0_path = multiprocesses[0].executable
 system = System(
     cpu=[TimingSimpleCPU(cpu_id=i) for i in range(args.num_cpus)],  # 5-stage pipeline CPU
-    mem_mode="timing",  
-    mem_ranges=[AddrRange('512MB')],  
-    cache_line_size=64,  
+    mem_mode="timing",
+    mem_ranges=[AddrRange('512MB')],
+    cache_line_size=64,
 )
 
 m5.instantiate()  # Instantiate the simulation
