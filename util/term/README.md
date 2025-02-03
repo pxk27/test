@@ -32,18 +32,33 @@ After running gem5 with a `Terminal` SimObject you can connect using either clie
 ./term localhost 3456
 
 # Using Python client
-./term.py localhost 3456
+./gem5term.py localhost 3456
 # or simply (localhost is default)
-./term.py 3456
+./gem5term.py 3456
 ```
 
 Note: This is the default for all gem5 full system simulations.
 
 ### Unix Domain Socket Connection
 
-1. In your gem5 configuration script set the port of the terminal object. For example on the `X86Board` you can use
+1. In your gem5 configuration script set the port of the terminal object. For example on the `X86Board` you can add the line
 
 ```python
+board.pc.com_1.device.port = "/tmp/gem5.term0"
+```
+
+after setting the board and workload:
+
+```python
+board = X86Board(
+    clk_freq="3GHz",
+    processor=processor,
+    memory=memory,
+    cache_hierarchy=cache_hierarchy,
+)
+workload = obtain_resource("x86-ubuntu-24.04-boot-no-systemd")
+board.set_workload(workload)
+
 board.pc.com_1.device.port = "/tmp/gem5.term0"
 ```
 
@@ -54,7 +69,7 @@ board.pc.com_1.device.port = "/tmp/gem5.term0"
 ./term --unix /tmp/gem5.term0
 
 # Using Python client
-./term.py --unix /tmp/gem5.term0
+./gem5term.py --unix /tmp/gem5.term0
 ```
 
 ### Why use unix sockets?
