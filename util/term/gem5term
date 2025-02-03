@@ -238,10 +238,6 @@ class TerminalClient:
                                 if self.escape_mode:
                                     continue
 
-                            # Echo input with proper line wrapping
-                            sys.stdout.buffer.write(data)
-                            sys.stdout.buffer.flush()
-
                             # Send to socket
                             sock.send(data)
                             self.log_data(data, "send")
