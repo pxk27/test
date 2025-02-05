@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Jason Power
+# Copyright (c) 2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,41 +24,38 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Options wrapper for simple gem5 configuration scripts
+# This Makefile compiles the hypercall-exit binary, used in the
+# "hypercall-exit-check.py" script to test the hypercall exit functionality.
+#
+# Notes:
+# * This must be compiled on an X86 host.
 
-This module wraps the argparse class so that we can register options
-from each class instead of only from the configuration script.
+CC = g++
 
-"""
+# This is the path to the gem5 root. Needs updated when added to gem5-resources
+# source repo.
+GEM5_ROOT = ../../../../..
 
-# Module-level variable to track if we've called the parse_args function yet
-called_parse_args = False
+CFLAGS = -Wall -Werror -O2 -static -I $(GEM5_ROOT)/include
 
-# import the argument parser
-from argparse import ArgumentParser
+SRC = hypercall-exit.cpp
+OBJ = $(SRC:.cpp=.o)
 
-# For fatal
-import m5
+TARGET = hypercall-exit
 
-# add the args we want to be able to control from the command line
-parser = ArgumentParser()
+all: $(TARGET)
 
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 
-def add_option(*args, **kwargs):
-    """Call "add_option" to the global options parser"""
+$(TARGET): $(OBJ) $(GEM5_ROOT)/util/m5/build/x86/out
 
-    if called_parse_args:
-        m5.fatal("Can't add an option after calling SimpleOpts.parse_args")
+	$(CC) $(CFLAGS) -o $@ $(OBJ) -lm5 -L $(GEM5_ROOT)/util/m5/build/x86/out
 
-    parser.add_argument(*args, **kwargs)
+$(GEM5_ROOT)/util/m5/build/x86/out:
+	cd $(GEM5_ROOT)/util/m5 && scons build/x86/out/m5 -j `nproc`
 
+clean:
+	- rm -r $(OBJ) $(TARGET)  $(GEM5_ROOT)/util/m5/build/x86/out
 
-def parse_args():
-    global called_parse_args
-    called_parse_args = True
-
-    return parser.parse_args()
-
-
-def print_help(*args, **kwargs):
-    parser.print_help(*args, **kwargs)
+.PHONY: all clean
