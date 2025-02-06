@@ -126,7 +126,7 @@ def define_options(parser):
         help="Recycle latency for ruby controller input buffers",
     )
 
-    import_module(f"ruby.{buildEnv["PROTOCOL"]}").define_options(parser)
+    import_module(f"ruby.{buildEnv['PROTOCOL']}").define_options(parser)
 
     Network.define_options(parser)
 
@@ -248,14 +248,14 @@ def create_system(
 
     try:
         (cpu_sequencers, dir_cntrls, topology) = import_module(
-            f"ruby.{buildEnv["PROTOCOL"]}"
+            f"ruby.{buildEnv['PROTOCOL']}"
         ).create_system(
             options, full_system, system, dma_ports, bootmem, ruby, cpus
         )
     except:
         print(
             "Error: could not create sytem for ruby protocol "
-            f"{buildEnv["PROTOCOL"]}"
+            f"{buildEnv['PROTOCOL']}"
         )
         raise
 
