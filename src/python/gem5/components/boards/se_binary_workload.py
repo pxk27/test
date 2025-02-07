@@ -148,10 +148,19 @@ class SEBinaryWorkload:
         assert isinstance(self, AbstractBoard)
 
         num_cores = self.get_processor().get_num_cores()
-        assert len(binaries) == num_cores == len(arguments), (
-            f"Number of binaries({len(binaries)}), "
-            f"arguments({len(arguments)}) and cores({num_cores}) does not match."
+        assert len(binaries) == num_cores, (
+            f"Number of binaries({len(binaries)}) "
+            f"and cores({num_cores}) should be the same."
         )
+        if arguments:
+            assert len(binaries) == len(arguments), (
+                f"Mismatch between binaries and arguments: "
+                f"{len(binaries)} binaries but {len(arguments)} argument lists provided. "
+                "The 'arguments' list is optional if none of the binaries require arguments. "
+                "However, if any binary requires arguments, a list must be provided for all binaries. "
+                "For binaries that do not require arguments, an empty list should be used."
+)
+        
 
         if self.is_workload_set():
             warn("Workload has been set more than once!")
