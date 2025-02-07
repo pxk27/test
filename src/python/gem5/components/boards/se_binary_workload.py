@@ -159,8 +159,7 @@ class SEBinaryWorkload:
                 "The 'arguments' list is optional if none of the binaries require arguments. "
                 "However, if any binary requires arguments, a list must be provided for all binaries. "
                 "For binaries that do not require arguments, an empty list should be used."
-)
-        
+            )
 
         if self.is_workload_set():
             warn("Workload has been set more than once!")
