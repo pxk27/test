@@ -1803,5 +1803,11 @@ ISA::globalClearExclusive(ExecContext *xc)
     xc->setMiscReg(MISCREG_SEV_MAILBOX, true);
 }
 
+int64_t
+ISA::getIntegerLength() const
+{
+    return inAArch64(tc) ? 64 : 32;
+}
+
 } // namespace ArmISA
 } // namespace gem5

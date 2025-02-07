@@ -968,5 +968,12 @@ ISA::unserialize(CheckpointIn &cp)
     }
 }
 
+int64_t
+ISA::getIntegerLength() const
+{
+    PSTATE pstate = readMiscRegNoEffect(MISCREG_PSTATE);
+    return pstate.am ? 32 : 64;
+}
+
 } // namespace SparcISA
 } // namespace gem5

@@ -92,5 +92,12 @@ ISA::copyRegsFrom(ThreadContext *src)
     tc->pcState(src->pcState());
 }
 
+int64_t
+ISA::getIntegerLength() const
+{
+    Msr msr = tc->getReg(int_reg::Msr);
+    return msr.sf ? 64 : 32;
+}
+
 } // namespace PowerISA
 } // namespace gem5

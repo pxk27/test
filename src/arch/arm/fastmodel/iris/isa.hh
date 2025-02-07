@@ -82,6 +82,11 @@ class ISA : public BaseISA
     {
         panic("setMiscReg not implemented.");
     }
+
+    int64_t getIntegerLength() const override
+    {
+        panic("getIntegerLength not implemented.");
+    }
 };
 
 } // namespace Iris

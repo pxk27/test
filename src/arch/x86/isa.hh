@@ -93,6 +93,8 @@ class ISA : public BaseISA
 
     void setThreadContext(ThreadContext *_tc) override;
 
+    int64_t getIntegerLength() const override;
+
     std::string getVendorString() const;
 
     std::unique_ptr<X86CPUID> cpuid;

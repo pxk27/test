@@ -191,6 +191,8 @@ class ISA : public BaseISA
 
     int64_t getVectorLengthInBytes() const override { return vlen >> 3; }
 
+    int64_t getIntegerLength() const override;
+
     PrivilegeModeSet getPrivilegeModeSet() { return _privilegeModeSet; }
 
     bool resumeOnPending() { return _wfiResumeOnPending; }

@@ -182,6 +182,8 @@ namespace MipsISA
         }
 
         void copyRegsFrom(ThreadContext *src) override;
+
+        int64_t getIntegerLength() const override { return 32; }
     };
 } // namespace MipsISA
 } // namespace gem5

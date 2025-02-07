@@ -146,6 +146,11 @@ class BaseISA : public SimObject
      * For other ISAs, this function returns -1.
      */
     virtual int64_t getVectorLengthInBytes() const { return -1; }
+
+    /**
+     * Get integer register length based on the current mode of the context.
+     */
+    virtual int64_t getIntegerLength() const = 0;
 };
 
 } // namespace gem5

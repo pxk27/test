@@ -1048,6 +1048,12 @@ ISA::resetThread()
     Reset().invoke(tc);
 }
 
+int64_t
+ISA::getIntegerLength() const
+{
+    return (_rvType == RV64) ? 64 : 32;
+}
+
 Addr
 ISA::getFaultHandlerAddr(RegIndex idx, uint64_t cause, bool intr) const
 {

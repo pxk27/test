@@ -213,6 +213,8 @@ class ISA : public BaseISA
     void copyRegsFrom(ThreadContext *src) override;
 
     ISA(const Params &p);
+
+    int64_t getIntegerLength() const override;
 };
 
 } // namespace SparcISA

@@ -534,5 +534,12 @@ ISA::getVendorString() const
     return vendorString;
 }
 
+int64_t
+ISA::getIntegerLength() const
+{
+    HandyM5Reg m5reg = readMiscRegNoEffect(misc_reg::M5Reg);
+    return (m5reg.submode == SixtyFourBitMode) ? 64 : 32;
+}
+
 } // namespace X86ISA
 } // namespace gem5

@@ -438,6 +438,8 @@ namespace ArmISA
         void globalClearExclusive(ExecContext *xc) override;
 
         int64_t getVectorLengthInBytes() const override { return sveVL * 16; }
+
+        int64_t getIntegerLength() const override;
     };
 
 } // namespace ArmISA

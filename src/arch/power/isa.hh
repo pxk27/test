@@ -97,6 +97,8 @@ class ISA : public BaseISA
     using Params = PowerISAParams;
 
     ISA(const Params &p);
+
+    int64_t getIntegerLength() const override;
 };
 
 } // namespace PowerISA
