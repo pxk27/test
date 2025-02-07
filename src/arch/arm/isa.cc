@@ -128,10 +128,15 @@ ISA::ISA(const Params &p) : BaseISA(p, "arm"), system(NULL),
     }
 
     selfDebug = new SelfDebug();
-    initializeMiscRegMetadata();
-    preUnflattenMiscReg();
 
     clear();
+}
+
+void
+ISA::initState()
+{
+    initializeMiscRegMetadata();
+    preUnflattenMiscReg();
 }
 
 void
