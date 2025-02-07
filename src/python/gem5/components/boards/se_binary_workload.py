@@ -170,10 +170,14 @@ class SEBinaryWorkload:
         self._set_fullsystem(False)
 
         multiprocesses = []
+        binary_arguments = []
         for i, binary in enumerate(binaries):
+            if arguments:
+                binary_arguments = arguments[i]
             process = self._create_process(
                 binary=binary,
                 pid=100 + i,
+                arguments=binary_arguments,
                 stdin_file=stdin_file,
                 stdout_file=stdout_file,
                 stderr_file=stderr_file,
@@ -252,6 +256,7 @@ class SEBinaryWorkload:
         process = self._create_process(
             binary=binary,
             pid=100,
+            arguments=arguments,
             stdin_file=stdin_file,
             stdout_file=stdout_file,
             stderr_file=stderr_file,
