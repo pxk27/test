@@ -373,7 +373,7 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
-    if (inAArch64(context()))
+    if (context()->getIsaPtr()->getIntegerLength() == 64)
         return &regCache64;
     else
         return &regCache32;

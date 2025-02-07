@@ -249,8 +249,7 @@ RemoteGDB::SPARC64GdbRegCache::setRegs(ThreadContext *context) const
 BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
-    PSTATE pstate = context()->readMiscReg(MISCREG_PSTATE);
-    if (pstate.am) {
+    if (context()->getIsaPtr()->getIntegerLength() == 32) {
         return &regCache32;
     } else {
         return &regCache64;

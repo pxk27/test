@@ -313,8 +313,8 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
     };
 #undef GDB_XML
 
-    Msr msr = context()->getReg(int_reg::Msr);
-    auto& annexMap = msr.sf ? annexMap64 : annexMap32;
+    bool is_64bits = (context()->getIsaPtr()->getIntegerLength() == 64);
+    auto& annexMap = is_64bits ? annexMap64 : annexMap32;
     auto it = annexMap.find(annex);
     if (it == annexMap.end())
         return false;

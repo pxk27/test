@@ -693,11 +693,11 @@ RemoteGDB::getXferFeaturesRead(const std::string &annex, std::string &output)
 BaseGdbRegCache *
 RemoteGDB::gdbRegs()
 {
-    BaseGdbRegCache* regs[enums::Num_RiscvType] = {
-        [RV32] = &regCache32,
-        [RV64] = &regCache64,
-    };
-    return regs[getRvType(context())];
+    if (context()->getIsaPtr()->getIntegerLength() == 64) {
+        return &regCache64;
+    } else {
+        return &regCache32;
+    }
 }
 
 } // namespace gem5

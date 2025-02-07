@@ -113,8 +113,7 @@ RemoteGDB::gdbRegs()
     }
 
     // If that didn't work, decide based on the current mode of the context.
-    HandyM5Reg m5reg = context()->readMiscRegNoEffect(misc_reg::M5Reg);
-    if (m5reg.submode == SixtyFourBitMode)
+    if (context()->getIsaPtr()->getIntegerLength() == 64)
         return &regCache64;
     else
         return &regCache32;
