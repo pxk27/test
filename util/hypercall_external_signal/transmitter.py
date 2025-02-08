@@ -27,8 +27,32 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This module provides functionality to communicate with gem5 processes via shared memory
-and signals.
+Generic transmitter for sending JSON payloads to gem5 via shared memory and signals.
+
+This module provides functionality to send correctly formatted JSON strings to gem5.
+The JSON payload must:
+- Be a valid JSON string
+- Contain required fields (id, payload)
+- Be less than 4096 bytes when encoded
+- Follow gem5's IPC protocol format
+
+Example valid JSON format:
+{
+    "id": <numeric_id>,
+    "payload": {
+        "key1": "value1",
+        "key2": "value2"
+    }
+}
+
+Command line usage:
+    # Send string payload
+    python transmitter.py 1234 1000 '{"message": "hello"}'
+
+    # Send numeric payload
+    python transmitter.py 1234 1000 '{"value": 42}'
+
+Note: All payloads must be valid JSON strings, even for numeric values.
 
 The module uses logging for debug output which is disabled by default. To enable debug
 logging, Set environment variable:
@@ -104,14 +128,14 @@ def send_signal(pid: int, id: int, payload: str) -> None:
         shm.unlink()
         sys.exit(1)
 
-    logger.info(
+    logger.debug(
         f"Sent a SIGHUP signal to PID {pid} with payload: '{final_payload}'"
     )
 
     while bytes(shm.buf[:shared_mem_size]).decode().strip("\x00") != "done":
-        logger.info("Waiting for gem5 to finish using shared memory...")
+        logger.debug("Waiting for gem5 to finish using shared memory...")
         sleep(1)
-    logger.info("Done message received")
+    logger.debug("Done message received")
     shm.close()
     try:
         shm.unlink()
