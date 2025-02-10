@@ -63,6 +63,7 @@ from .exit_handler import (
     AfterBootScriptExitHandler,
     ClassicGeneratorExitHandler,
     KernelBootedExitHandler,
+    OrchestratorExitHandler,
     ScheduledExitEventHandler,
     WorkBeginExitHandler,
     WorkEndExitHandler,
@@ -125,6 +126,10 @@ class Simulator:
             # scheduled by the user via `scheduleTickExitAbsolute` or
             # `scheduleTickExitFromCurrent`.
             6: ScheduledExitEventHandler,
+            # The default exit handler for the gem5 orchestrator.
+            # The orchestrator is a gem5 utility which allows gem5 to be
+            # controlled by an externally with bi-directional communication.
+            1000: OrchestratorExitHandler,
         }
         assert all(
             i >= 0 for i in default_map.keys()
