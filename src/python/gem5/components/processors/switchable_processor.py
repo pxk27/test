@@ -157,6 +157,10 @@ class SwitchableProcessor(AbstractProcessor):
         # Ensure the current processor is updated.
         self._current_cores = to_switch
 
+    @overrides(AbstractProcessor)
+    def switch(self) -> None:
+        super().switch()
+
     def _pre_instantiate(self, root: Root) -> None:
         super()._pre_instantiate(root)
         # The following is a bit of a hack. If a simulation is to use a KVM
