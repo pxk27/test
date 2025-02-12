@@ -233,6 +233,7 @@ class WorkEndExitHandler(ExitHandler, hypercall_num=5):
     def _exit_simulation(self) -> bool:
         return False
 
+
 class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
     """A handler designed to be the default for the classic exit event.
 
