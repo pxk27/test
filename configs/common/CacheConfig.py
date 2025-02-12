@@ -136,6 +136,8 @@ def config_cache(options, system):
         )
 
         system.tol2bus = L2XBar(clk_domain=system.cpu_clk_domain)
+        system.tol2bus.badaddr_responder = BadAddr()
+        system.tol2bus.default = system.tol2bus.badaddr_responder.pio
         system.l2.cpu_side = system.tol2bus.mem_side_ports
         system.l2.mem_side = system.membus.cpu_side_ports
 
