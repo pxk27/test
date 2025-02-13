@@ -41,6 +41,7 @@
 #include "base/random.hh"
 
 #include <sstream>
+#include <algorithm>
 
 namespace gem5
 {
