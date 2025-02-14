@@ -201,6 +201,8 @@ namespace ArmISA
         RegVal readMiscRegReset(RegIndex) const;
         void setMiscRegReset(RegIndex, RegVal val);
 
+        void initState() override;
+
         int
         flattenMiscIndex(int reg) const
         {
