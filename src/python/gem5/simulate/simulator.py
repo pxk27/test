@@ -39,6 +39,7 @@ from typing import (
 )
 
 import m5
+import m5.options
 import m5.ticks
 from m5.ext.pystats.simstat import SimStat
 from m5.stats import addStatVisitor
@@ -500,11 +501,8 @@ class Simulator:
             i >= 0 for i in self._exit_handler_id_map.keys()
         ), "Exit handler mapped to ID <0"
 
-        # A simple mapping of ticks to exit event.
-        # This can help in cases where the order and number of exits thus far
-        # matters (say an exit event acts differently for the Nth time it is
-        # hit)
-        self._exit_event_id_log = {}
+        # A simple log that logs the exit event and the tick at which it occurred.
+        self._exit_event_log = []
 
     def set_id(self, id: str) -> None:
         """Set the ID of the simulator.
@@ -717,6 +715,12 @@ class Simulator:
 
         return to_return
 
+    def get_exit_event_log(self) -> List[str]:
+        """
+        Returns a list of exit event IDs and the ticks at which they occurred.
+        """
+        return self._exit_event_log
+
     def override_outdir(self, new_outdir: Path) -> None:
         """This function can be used to override the output directory locatiomn
         Assiming the path passed is valid, the directory will be created
@@ -821,10 +825,17 @@ class Simulator:
             exit_handler = self.get_exit_handler_id_map()[
                 exit_event_hypercall_id
             ](self._last_exit_event.getPayload())
-            exit_on_completion = exit_handler.handle(self)
-            self._exit_event_id_log[self.get_current_tick()] = (
-                self._last_exit_event.getHypercallId()
+
+            exit_event_info = (
+                f"Exit event called at Tick {self.get_current_tick()}: "
+                f"{exit_handler.get_exit_info()}"
             )
+
+            if m5.options.show_exit_event_messages:
+                print(exit_event_info)
+
+            exit_on_completion = exit_handler.handle(self)
+            self._exit_event_log.append(exit_event_info)
 
             # If the generator returned True we will return from the Simulator
             # run loop. In the case of a function: if it returned True.
