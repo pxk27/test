@@ -81,10 +81,12 @@ class LTAGE : public TAGE
     LTAGE(const LTAGEParams &params);
 
     // Base class methods.
-    void squash(ThreadID tid, void * &bp_history) override;
+    virtual void squash(ThreadID tid, void * &bp_history) override;
     void update(ThreadID tid, Addr pc, bool taken,
                 void * &bp_history, bool squashed,
                 const StaticInstPtr & inst, Addr target) override;
+    virtual void branchPlaceholder(ThreadID tid, Addr pc,
+                                   bool uncond, void * &bp_history) override;
 
     void init() override;
 
@@ -103,8 +105,10 @@ class LTAGE : public TAGE
     struct LTageBranchInfo : public TageBranchInfo
     {
         LoopPredictor::BranchInfo *lpBranchInfo;
-        LTageBranchInfo(TAGEBase &tage, LoopPredictor &lp)
-          : TageBranchInfo(tage), lpBranchInfo(lp.makeBranchInfo())
+        LTageBranchInfo(TAGEBase &tage, LoopPredictor &lp,
+                        Addr pc, bool conditional)
+          : TageBranchInfo(tage, pc, conditional),
+            lpBranchInfo(lp.makeBranchInfo())
         {}
 
         virtual ~LTageBranchInfo()

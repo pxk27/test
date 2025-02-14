@@ -369,7 +369,7 @@ class TAGE_SC_L_TAGE(TAGEBase):
     initialTCounterValue = 1 << 9
     useAltOnNaBits = 5
     # TODO No speculation implemented as of now
-    speculativeHistUpdate = False
+    speculativeHistUpdate = True
 
     # This size does not set the final sizes of the tables (it is just used
     # for some calculations)
@@ -561,6 +561,10 @@ class StatisticalCorrector(SimObject):
     cxx_header = "cpu/pred/statistical_corrector.hh"
     abstract = True
 
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+
     # Statistical corrector parameters
 
     numEntriesFirstLocalHistories = Param.Unsigned(
@@ -616,6 +620,10 @@ class StatisticalCorrector(SimObject):
         0, "Initial pUpdate threshold counter value"
     )
 
+    speculativeHistUpdate = Param.Bool(
+        True, "Use speculative update for the statistical corrector"
+    )
+
 
 # TAGE-SC-L branch predictor as desribed in
 # https://www.jilp.org/cbp2016/paper/AndreSeznecLimited.pdf
@@ -634,6 +642,9 @@ class TAGE_SC_L(LTAGE):
     cxx_class = "gem5::branch_prediction::TAGE_SC_L"
     cxx_header = "cpu/pred/tage_sc_l.hh"
     abstract = True
+    sc_enabled = Param.Bool(
+        True, "Use the statistical corrector in the branch predictor"
+    )
 
     statistical_corrector = Param.StatisticalCorrector("Statistical Corrector")
 
@@ -1088,3 +1099,12 @@ class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
     tage = MPP_TAGE_8KB()
     loop_predictor = MPP_LoopPredictor_8KB()
     statistical_corrector = MPP_StatisticalCorrector_8KB()
+
+
+class TageSCLRef(BranchPredictor):
+    type = "TageSCLRef"
+    cxx_class = "gem5::branch_prediction::TageSCLRef"
+    cxx_header = "cpu/pred/tagescl_ref.hh"
+
+    localPredictorSize = Param.Unsigned(2048, "Size of local predictor")
+    localCtrBits = Param.Unsigned(2, "Bits per counter")

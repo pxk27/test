@@ -38,12 +38,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/pred/2bit_local.hh"
+#include "cpu/pred/tagescl_ref.hh"
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Fetch.hh"
+
+#include "cpu/pred/predictor.h"
 
 namespace gem5
 {
@@ -51,35 +53,23 @@ namespace gem5
 namespace branch_prediction
 {
 
-LocalBP::LocalBP(const LocalBPParams &params)
-    : BPredUnit(params),
-      localPredictorSize(params.localPredictorSize),
-      localCtrBits(params.localCtrBits),
-      localPredictorSets(localPredictorSize / localCtrBits),
-      localCtrs(localPredictorSets, SatCounter8(localCtrBits)),
-      indexMask(localPredictorSets - 1)
+TageSCLRef::TageSCLRef(const TageSCLRefParams &params)
+    : BPredUnit(params)
 {
-    if (!isPowerOf2(localPredictorSize)) {
-        fatal("Invalid local predictor size!\n");
-    }
-
-    if (!isPowerOf2(localPredictorSets)) {
-        fatal("Invalid number of local predictor sets! Check localCtrBits.\n");
-    }
-
-    DPRINTF(Fetch, "index mask: %#x\n", indexMask);
-
-    DPRINTF(Fetch, "local predictor size: %i\n",
-            localPredictorSize);
-
-    DPRINTF(Fetch, "local counter bits: %i\n", localCtrBits);
-
-    DPRINTF(Fetch, "instruction shift amount: %i\n",
-            instShiftAmt);
+    predictor = new PREDICTOR();
 }
 
+TageSCLRef::~TageSCLRef()
+{
+    delete predictor;
+}
+
+
+// void
+// TageSCLRef::updateHistories(ThreadID tid, Addr pc, bool uncond,
+//                          bool taken, Addr target, void * &bp_history)
 void
-LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+TageSCLRef::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                    Addr target, const StaticInstPtr &inst, void * &bp_history)
 {
 // Place holder for a function that is called to update predictor history
@@ -87,65 +77,64 @@ LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
 
 
 bool
-LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
+TageSCLRef::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 {
-    bool taken;
-    unsigned local_predictor_idx = getLocalIndex(branch_addr);
-
-    DPRINTF(Fetch, "Looking up index %#x\n",
-            local_predictor_idx);
-
-    uint8_t counter_val = localCtrs[local_predictor_idx];
-
-    DPRINTF(Fetch, "prediction is %i.\n",
-            (int)counter_val);
-
-    taken = getPrediction(counter_val);
-
-    return taken;
+    auto pred = predictor->GetPrediction(branch_addr);
+    return pred;
 }
 
 void
-LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
+TageSCLRef::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
                 bool squashed, const StaticInstPtr & inst, Addr target)
 {
-    assert(bp_history == NULL);
-    unsigned local_predictor_idx;
-
-    // No state to restore, and we do not update on the wrong
-    // path.
     if (squashed) {
         return;
     }
 
-    // Update the local predictor.
-    local_predictor_idx = getLocalIndex(branch_addr);
-
-    DPRINTF(Fetch, "Looking up index %#x\n", local_predictor_idx);
-
-    if (taken) {
-        DPRINTF(Fetch, "Branch updated as taken.\n");
-        localCtrs[local_predictor_idx]++;
-    } else {
-        DPRINTF(Fetch, "Branch updated as not taken.\n");
-        localCtrs[local_predictor_idx]--;
+    auto brtype = getBranchType(inst);
+    OpType opType = OPTYPE_OP;
+    switch (brtype) {
+        case BranchType::DirectUncond:
+            opType = OPTYPE_JMP_DIRECT_UNCOND;
+            break;
+        case BranchType::DirectCond:
+            opType = OPTYPE_JMP_DIRECT_COND;
+            break;
+        case BranchType::IndirectUncond:
+            opType = OPTYPE_JMP_INDIRECT_UNCOND;
+            break;
+        case BranchType::IndirectCond:
+            opType = OPTYPE_JMP_INDIRECT_COND;
+            break;
+        case BranchType::CallDirect:
+            opType = OPTYPE_CALL_DIRECT_UNCOND;
+            break;
+        case BranchType::CallIndirect:
+            opType = OPTYPE_CALL_INDIRECT_UNCOND;
+            break;
+        case BranchType::Return:
+            opType = OPTYPE_RET_UNCOND;
+            break;
+        default:
+            opType = OPTYPE_OP;
+            break;
     }
+
+    if (opType == OPTYPE_OP) {
+        return;
+    }
+
+    if (brtype == BranchType::DirectCond) {
+        predictor->UpdatePredictor(branch_addr, opType, taken, false, target);
+    } else {
+        predictor->TrackOtherInst(branch_addr, opType, taken, target);
+    }
+
+
+
+
 }
 
-inline
-bool
-LocalBP::getPrediction(uint8_t &count)
-{
-    // Get the MSB of the count
-    return (count >> (localCtrBits - 1));
-}
-
-inline
-unsigned
-LocalBP::getLocalIndex(Addr &branch_addr)
-{
-    return (branch_addr >> instShiftAmt) & indexMask;
-}
 
 
 } // namespace branch_prediction

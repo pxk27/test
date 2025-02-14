@@ -47,13 +47,14 @@
 #include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "cpu/pred/bpred_unit.hh"
-#include "params/LocalBP.hh"
+#include "params/TageSCLRef.hh"
 
 namespace gem5
 {
 
 namespace branch_prediction
 {
+  class PREDICTOR;
 
 /**
  * Implements a local predictor that uses the PC to index into a table of
@@ -62,17 +63,20 @@ namespace branch_prediction
  * predictor state that needs to be recorded or updated; the update can be
  * determined solely by the branch being taken or not taken.
  */
-class LocalBP : public BPredUnit
+class TageSCLRef : public BPredUnit
 {
   public:
     /**
      * Default branch predictor constructor.
      */
-    LocalBP(const LocalBPParams &params);
+    TageSCLRef(const TageSCLRefParams &params);
+    ~TageSCLRef();
 
     // Overriding interface functions
     bool lookup(ThreadID tid, Addr pc, void * &bp_history) override;
 
+    // void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+    //                      Addr target,  void * &bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target, const StaticInstPtr &inst,
                          void * &bp_history) override;
@@ -85,31 +89,8 @@ class LocalBP : public BPredUnit
     { assert(bp_history == NULL); }
 
   private:
-    /**
-     *  Returns the taken/not taken prediction given the value of the
-     *  counter.
-     *  @param count The value of the counter.
-     *  @return The prediction based on the counter value.
-     */
-    inline bool getPrediction(uint8_t &count);
 
-    /** Calculates the local index based on the PC. */
-    inline unsigned getLocalIndex(Addr &PC);
-
-    /** Size of the local predictor. */
-    const unsigned localPredictorSize;
-
-    /** Number of bits of the local predictor's counters. */
-    const unsigned localCtrBits;
-
-    /** Number of sets. */
-    const unsigned localPredictorSets;
-
-    /** Array of counters that make up the local predictor. */
-    std::vector<SatCounter8> localCtrs;
-
-    /** Mask to get index bits. */
-    const unsigned indexMask;
+    PREDICTOR* predictor;
 };
 
 } // namespace branch_prediction
