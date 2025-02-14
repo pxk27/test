@@ -323,7 +323,8 @@ Fetch2::evaluate()
             /* Set the PC if the stream changes.  Setting havePC to false in
              *  a previous cycle handles all other change of flow of control
              *  issues */
-            bool set_pc = fetch_info.lastStreamSeqNum != line_in->id.streamSeqNum;
+            bool set_pc =
+                fetch_info.lastStreamSeqNum != line_in->id.streamSeqNum;
 
             if (!discard_line && (!fetch_info.havePC || set_pc)) {
                 /* Set the inputIndex to be the MachInst-aligned offset
@@ -412,18 +413,21 @@ Fetch2::evaluate()
                     DPRINTF(Fetch, "decoder inst %s\n", *dyn_inst);
 
                     // Collect some basic inst class stats
-                    if (decoded_inst->isLoad())
+                    if (decoded_inst->isLoad()) {
                         stats.loadInstructions++;
-                    else if (decoded_inst->isStore())
+                    } else if (decoded_inst->isStore()) {
                         stats.storeInstructions++;
-                    else if (decoded_inst->isAtomic())
+                    } else if (decoded_inst->isAtomic()) {
                         stats.amoInstructions++;
-                    else if (decoded_inst->isVector())
+                    } else if (decoded_inst->isVector()) {
                         stats.vecInstructions++;
-                    else if (decoded_inst->isFloating())
+                    } else if (decoded_inst->isFloating()) {
                         stats.fpInstructions++;
-                    else if (decoded_inst->isInteger())
+                    } else if (decoded_inst->isInteger()) {
                         stats.intInstructions++;
+                    }
+
+                    stats.totalInstructions++;
 
                     DPRINTF(Fetch, "Instruction extracted from line %s"
                         " lineWidth: %d output_index: %d inputIndex: %d"
@@ -600,6 +604,8 @@ Fetch2::isDrained()
 
 Fetch2::Fetch2Stats::Fetch2Stats(MinorCPU *cpu)
       : statistics::Group(cpu, "fetch2"),
+      ADD_STAT(totalInstructions, statistics::units::Count::get(),
+               "Total number of instructions successfully decoded"),
       ADD_STAT(intInstructions, statistics::units::Count::get(),
                "Number of integer instructions successfully decoded"),
       ADD_STAT(fpInstructions, statistics::units::Count::get(),
@@ -613,6 +619,8 @@ Fetch2::Fetch2Stats::Fetch2Stats(MinorCPU *cpu)
       ADD_STAT(amoInstructions, statistics::units::Count::get(),
                "Number of memory atomic instructions successfully decoded")
 {
+        totalInstructions
+            .flags(statistics::total);
         intInstructions
             .flags(statistics::total);
         fpInstructions

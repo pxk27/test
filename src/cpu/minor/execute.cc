@@ -92,7 +92,8 @@ Execute::Execute(const std::string &name_,
             ExecuteThreadInfo(params.executeCommitLimit)),
     interruptPriority(0),
     issuePriority(0),
-    commitPriority(0)
+    commitPriority(0),
+    issueStats(&cpu_)
 {
     if (commitLimit < 1) {
         fatal("%s: executeCommitLimit must be >= 1 (%d)\n", name_,
@@ -604,6 +605,24 @@ Execute::issue(ThreadID thread_id)
             do {
                 FUPipeline *fu = funcUnits[fu_index];
 
+                // Update ALU access stats.
+                if (!inst->isFault() && inst->staticInst->isVector()) {
+                    cpu.executeStats[inst->id.threadId]->numVecAluAccesses++;
+                }
+
+                if (!inst->isFault() && inst->staticInst->isFloating()) {
+                    cpu.executeStats[inst->id.threadId]->numFpAluAccesses++;
+                }
+
+                if (!inst->isFault() && inst->staticInst->isInteger()) {
+                    cpu.executeStats[inst->id.threadId]->numIntAluAccesses++;
+                }
+
+                if (inst->isMemRef()) {
+                    cpu.executeStats[inst->id.threadId]->numMemRefs++;
+                }
+
+
                 DPRINTF(MinorExecute, "Trying to issue inst: %s to FU: %d\n",
                     *inst, fu_index);
 
@@ -744,6 +763,12 @@ Execute::issue(ThreadID thread_id)
                             thread.inFUMemInsts->push(fu_inst);
                         }
 
+                        /* Update the # of insts. issued per OpClass type */
+                        if (!inst->isFault()) {
+                           auto opclass = inst->staticInst->opClass();
+                           issueStats.statIssuedInstType[thread_id][opclass]++;
+                        }
+
                         /* Issue to FU */
                         fu->push(fu_inst);
                         /* And start the countdown on activity to allow
@@ -866,6 +891,39 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
         thread->numInst++;
         thread->threadStats.numInsts++;
         cpu.commitStats[inst->id.threadId]->numInsts++;
+
+        if (inst->staticInst->isInteger()) {
+            cpu.commitStats[inst->id.threadId]->numIntInsts++;
+        }
+
+        if (inst->staticInst->isFloating()) {
+            cpu.commitStats[inst->id.threadId]->numFpInsts++;
+        }
+
+        if (inst->staticInst->isVector()) {
+            cpu.commitStats[inst->id.threadId]->numVecInsts++;
+        }
+
+        if (inst->staticInst->isMemRef()) {
+            cpu.commitStats[inst->id.threadId]->numMemRefs++;
+        }
+
+        if (inst->staticInst->isLoad()) {
+            cpu.commitStats[inst->id.threadId]->numLoadInsts++;
+        }
+
+        if (inst->staticInst->isStore() || inst->staticInst->isAtomic()) {
+            cpu.commitStats[inst->id.threadId]->numStoreInsts++;
+        }
+
+        if (inst->staticInst->isCall() || inst->staticInst->isReturn()) {
+            cpu.commitStats[inst->id.threadId]->numCallsReturns++;
+        }
+
+        if (inst->staticInst->isCall()) {
+            cpu.commitStats[inst->id.threadId]->functionCalls++;
+        }
+
         cpu.baseStats.numInsts++;
 
         /* Act on events related to instruction counts */
@@ -1890,6 +1948,18 @@ MinorCPU::MinorCPUPort &
 Execute::getDcachePort()
 {
     return lsq.getDcachePort();
+}
+
+Execute::IssueStats::IssueStats(MinorCPU *cpu)
+        : statistics::Group(cpu),
+        ADD_STAT(statIssuedInstType, statistics::units::Count::get(),
+                 "Number of instructions issued per FU type, per thread")
+{
+        statIssuedInstType
+            .init(cpu->numThreads, enums::Num_OpClass)
+            .flags(statistics::total | statistics::pdf | statistics::dist);
+        statIssuedInstType.ysubnames(enums::OpClassStrings);
+
 }
 
 } // namespace minor
