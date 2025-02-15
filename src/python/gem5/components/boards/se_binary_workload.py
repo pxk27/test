@@ -61,12 +61,156 @@ class SEBinaryWorkload:
     as a superclass to a board (i.e., something that inherits from
     `AbstractBoard`).
 
-    .. note::
-
-        At present this implementation is limited. A single
-        process is added to all cores as the workload. Therefore, despite allowing
-        for multi-core setups, multi-program workloads are not presently supported.
     """
+
+    def _create_process(
+        self,
+        binary: BinaryResource,
+        pid: int = 100,
+        arguments: List[str] = [],
+        stdin_file: Optional[FileResource] = None,
+        stdout_file: Optional[Path] = None,
+        stderr_file: Optional[Path] = None,
+        env_list: Optional[List[str]] = None,
+    ) -> Process:
+
+        process = Process(pid=pid)
+        binary_path = binary.get_local_path()
+        process.executable = binary_path
+        process.cmd = [binary_path] + arguments
+        if stdin_file is not None:
+            process.input = stdin_file.get_local_path()
+        if stdout_file is not None:
+            process.output = stdout_file.as_posix()
+        if stderr_file is not None:
+            process.errout = stderr_file.as_posix()
+        if env_list is not None:
+            process.env = env_list
+
+        if any(
+            core.is_kvm_core() for core in self.get_processor().get_cores()
+        ):
+            # Running KVM in SE mode requires special flags to be set for the
+            # process.
+            process.kvmInSE = True
+            process.useArchPT = True
+        return process
+
+    def _set_checkpoint(
+        self,
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+    ) -> None:
+
+        # Here we set `self._checkpoint`. This is then used by the
+        # Simulator module to setup checkpoints.
+        if checkpoint:
+            if isinstance(checkpoint, Path):
+                self._checkpoint = checkpoint
+            elif isinstance(checkpoint, AbstractResource):
+                self._checkpoint = Path(checkpoint.get_local_path())
+            else:
+                raise Exception(
+                    "The checkpoint must be None, Path, or "
+                    "AbstractResource."
+                )
+
+    def set_se_multi_binary_workload(
+        self,
+        binaries: List[BinaryResource],
+        exit_on_work_items: bool = True,
+        stdin_file: Optional[FileResource] = None,
+        stdout_file: Optional[Path] = None,
+        stderr_file: Optional[Path] = None,
+        env_list: Optional[List[str]] = None,
+        arguments: List[List[str]] = [],
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+    ) -> None:
+        """Set up the system to run a specific binary.
+
+        **Limitations**
+        * Dynamically linked executables are partially supported when the host
+          ISA and the simulated ISA are the same.
+
+        :param binaries: The list of resource encapsulating the binary to be run.
+        :param exit_on_work_items: Whether the simulation should exit on work
+                                   items. ``True`` by default.
+        :param stdin_file: The input file for the binary
+        :param stdout_file: The output file for the binary
+        :param stderr_file: The error output file for the binary
+        :param env_list: The environment variables defined for the binary
+        :param arguments: The list of input arguments for the binary
+        :param checkpoint: The checkpoint directory. Used to restore the
+                           simulation to that checkpoint.
+        """
+
+        # We assume this this is in a multiple-inheritance setup with an
+        # Abstract board. This function will not work otherwise.
+        assert isinstance(self, AbstractBoard)
+
+        num_cores = self.get_processor().get_num_cores()
+        assert len(binaries) == num_cores, (
+            f"Number of binaries({len(binaries)}) "
+            f"and cores({num_cores}) should be the same."
+        )
+        if arguments:
+            assert len(binaries) == len(arguments), (
+                f"Mismatch between binaries and arguments: "
+                f"{len(binaries)} binaries but {len(arguments)} argument lists provided. "
+                "The 'arguments' list is optional if none of the binaries require arguments. "
+                "However, if any binary requires arguments, a list must be provided for all binaries. "
+                "For binaries that do not require arguments, an empty list should be used."
+            )
+
+        if self.is_workload_set():
+            warn("Workload has been set more than once!")
+        self.set_is_workload_set(True)
+
+        # If we are setting a workload of this type, we need to run as a
+        # SE-mode simulation.
+        self._set_fullsystem(False)
+
+        multiprocesses = []
+        binary_arguments = []
+        for i, binary in enumerate(binaries):
+            if arguments:
+                binary_arguments = arguments[i]
+            process = self._create_process(
+                binary=binary,
+                pid=100 + i,
+                arguments=binary_arguments,
+                stdin_file=stdin_file,
+                stdout_file=stdout_file,
+                stderr_file=stderr_file,
+                env_list=env_list,
+            )
+            multiprocesses.append(process)
+
+        self.workload = SEWorkload.init_compatible(
+            binaries[0].get_local_path()
+        )
+        self.m5ops_base = max(0xFFFF0000, self.get_memory().get_size())
+
+        if isinstance(self.get_processor(), SwitchableProcessor):
+            # This is a hack to get switchable processors working correctly in
+            # SE mode. The "get_cores" API for processors only gets the current
+            # switched-in cores and, in most cases, this is what the script
+            # required. In the case there are switched-out cores via the
+            # SwitchableProcessor, we sometimes need to apply things to ALL
+            # cores (switched-in or switched-out). In this case we have an
+            # `__all_cores` function. Here we must apply the process to every
+            # core.
+            #
+            # A better API for this which avoids `isinstance` checks would be
+            # welcome.
+            for i, core in enumerate(self.get_processor()._all_cores()):
+                core.set_workload(multiprocesses[i])
+        else:
+            for i, core in enumerate(self.get_processor().get_cores()):
+                core.set_workload(multiprocesses[i])
+
+        # Set whether to exit on work items for the se_workload
+        self.exit_on_work_items = exit_on_work_items
+        self._set_checkpoint(checkpoint)
 
     def set_se_binary_workload(
         self,
@@ -109,29 +253,18 @@ class SEBinaryWorkload:
         # SE-mode simulation.
         self._set_fullsystem(False)
 
-        binary_path = binary.get_local_path()
-        self.workload = SEWorkload.init_compatible(binary_path)
+        process = self._create_process(
+            binary=binary,
+            pid=100,
+            arguments=arguments,
+            stdin_file=stdin_file,
+            stdout_file=stdout_file,
+            stderr_file=stderr_file,
+            env_list=env_list,
+        )
 
-        process = Process()
-        process.executable = binary_path
-        process.cmd = [binary_path] + arguments
-        if stdin_file is not None:
-            process.input = stdin_file.get_local_path()
-        if stdout_file is not None:
-            process.output = stdout_file.as_posix()
-        if stderr_file is not None:
-            process.errout = stderr_file.as_posix()
-        if env_list is not None:
-            process.env = env_list
-
-        if any(
-            core.is_kvm_core() for core in self.get_processor().get_cores()
-        ):
-            # Running KVM in SE mode requires special flags to be set for the
-            # process.
-            self.m5ops_base = max(0xFFFF0000, self.get_memory().get_size())
-            process.kvmInSE = True
-            process.useArchPT = True
+        self.workload = SEWorkload.init_compatible(binary.get_local_path())
+        self.m5ops_base = max(0xFFFF0000, self.get_memory().get_size())
 
         if isinstance(self.get_processor(), SwitchableProcessor):
             # This is a hack to get switchable processors working correctly in
@@ -153,19 +286,7 @@ class SEBinaryWorkload:
 
         # Set whether to exit on work items for the se_workload
         self.exit_on_work_items = exit_on_work_items
-
-        # Here we set `self._checkpoint`. This is then used by the
-        # Simulator module to setup checkpoints.
-        if checkpoint:
-            if isinstance(checkpoint, Path):
-                self._checkpoint = checkpoint
-            elif isinstance(checkpoint, AbstractResource):
-                self._checkpoint = Path(checkpoint.get_local_path())
-            else:
-                raise Exception(
-                    "The checkpoint must be None, Path, or "
-                    "AbstractResource."
-                )
+        self._set_checkpoint(checkpoint)
 
     def set_se_simpoint_workload(
         self,
