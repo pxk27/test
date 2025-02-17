@@ -61,3 +61,6 @@ def upgrader(cpt):
 
             if cpt.get(sec, "_compressed", fallback="") == "":
                 cpt.set(sec, "_compressed", "false")
+
+            if cpt.get(sec, "_new_vconf", fallback="") == "":
+                cpt.set(sec, "_new_vconf", "false")
