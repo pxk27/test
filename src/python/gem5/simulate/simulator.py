@@ -46,6 +46,7 @@ from m5.util import warn
 
 from gem5.components.boards.abstract_board import AbstractBoard
 
+from ..resources.resource import WorkloadResource
 from .exit_event import ExitEvent
 from .exit_event_generators import (
     dump_stats_generator,
@@ -62,6 +63,7 @@ from .exit_handler import (
     AfterBootScriptExitHandler,
     ClassicGeneratorExitHandler,
     KernelBootedExitHandler,
+    OrchestratorExitHandler,
     ScheduledExitEventHandler,
     WorkBeginExitHandler,
     WorkEndExitHandler,
@@ -124,6 +126,10 @@ class Simulator:
             # scheduled by the user via `scheduleTickExitAbsolute` or
             # `scheduleTickExitFromCurrent`.
             6: ScheduledExitEventHandler,
+            # The default exit handler for the gem5 orchestrator.
+            # The orchestrator is a gem5 utility which allows gem5 to be
+            # controlled by an externally with bi-directional communication.
+            1000: OrchestratorExitHandler,
         }
         assert all(
             i >= 0 for i in default_map.keys()
@@ -594,6 +600,20 @@ class Simulator:
         for core in self._board.get_processor().get_cores():
             core._set_inst_stop_any_thread(inst, self._instantiated)
 
+    def get_instruction_count(self) -> int:
+        """
+        Returns the number of instructions executed by all cores.
+
+        Note: This total is the sum since the last call to reset stats.
+        """
+        return self._board.get_processor().get_total_instructions()
+
+    def get_workload(self) -> WorkloadResource:
+        """
+        Returns the workload of the board.
+        """
+        return self._board.get_workload()
+
     def get_stats(self) -> Dict:
         """
         Obtain the current simulation statistics as a Dictionary, conforming
@@ -812,12 +832,17 @@ class Simulator:
         # This while loop will continue until an a generator yields True.
         while True:
             self._last_exit_event = m5.simulate(self.get_max_ticks())
-            # sys.exit(1)
             exit_event_hypercall_id = self._last_exit_event.getHypercallId()
-            assert (
+            if (
                 exit_event_hypercall_id
-                in self.get_exit_handler_id_map().keys()
-            ), f"Exit event type ID {self._last_exit_event.getTypeID()} in exit handler ID map"
+                not in self.get_exit_handler_id_map().keys()
+            ):
+                warn(
+                    f"Warning: Exit event type ID "
+                    f"{self._last_exit_event.getHypercallId()} "
+                    f"not in exit handler ID map"
+                )
+                continue
             exit_handler = self.get_exit_handler_id_map()[
                 exit_event_hypercall_id
             ](self._last_exit_event.getPayload())
